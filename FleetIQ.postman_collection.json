@@ -1,0 +1,1135 @@
+{
+  "info": {
+    "name": "FleetIQ API (all services via gateway)",
+    "description": "Run '0 - Get Token' first; the bearer token is stored and reused. All calls go through the YARP gateway on {{baseUrl}}. In Postman Settings, turn OFF 'SSL certificate verification' for the local dev certs.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5080",
+      "type": "string"
+    },
+    {
+      "key": "idpUrl",
+      "value": "https://localhost:5001",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "ordersId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "userAccountId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "carrierId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "loadId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "shipmentId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "invoiceId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "documentId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "notificationId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "reportDefinitionId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "complianceCheckId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "integrationConnectorId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "predictionRequestId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "0 - Get Token (run first)",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/x-www-form-urlencoded"
+          }
+        ],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "grant_type",
+              "value": "client_credentials"
+            },
+            {
+              "key": "client_id",
+              "value": "fleetiq.service"
+            },
+            {
+              "key": "client_secret",
+              "value": "REDACTED"
+            },
+            {
+              "key": "scope",
+              "value": "fleetiq.api"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{idpUrl}}/connect/token",
+          "host": [
+            "{{idpUrl}}"
+          ],
+          "path": [
+            "connect",
+            "token"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "var json = pm.response.json();",
+              "if (json && json.access_token) {",
+              "    pm.collectionVariables.set('token', json.access_token);",
+              "    console.log('Token saved');",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "01 - Orders",
+      "item": [
+        {
+          "name": "Create Orders",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": \"{{$guid}}\",\n  \"pickup\": {\n    \"street\": \"1 Main St\",\n    \"city\": \"Lisbon\",\n    \"postalCode\": \"1000-001\",\n    \"country\": \"PT\"\n  },\n  \"delivery\": {\n    \"street\": \"5 Park Ave\",\n    \"city\": \"Porto\",\n    \"postalCode\": \"4000-002\",\n    \"country\": \"PT\"\n  },\n  \"items\": [\n    {\n      \"description\": \"Pallet\",\n      \"quantity\": 2,\n      \"weightKg\": 120\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json && json.id) { pm.collectionVariables.set('ordersId', json.id); }",
+                  "pm.test('created', function () { pm.expect([200,201]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Orders by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{ordersId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{ordersId}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - Identity",
+      "item": [
+        {
+          "name": "Create Identity",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/useraccounts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "useraccounts"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"Email\": \"sample-email\",\n  \"FullName\": \"sample-fullname\",\n  \"TenantId\": \"{{$guid}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json && json.id) { pm.collectionVariables.set('userAccountId', json.id); }",
+                  "pm.test('created', function () { pm.expect([200,201]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Identity by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/useraccounts/{{userAccountId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "useraccounts",
+                "{{userAccountId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Identity -> activate",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/useraccounts/{{userAccountId}}/activate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "useraccounts",
+                "{{userAccountId}}",
+                "activate"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Carriers",
+      "item": [
+        {
+          "name": "Create Carriers",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/carriers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "carriers"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"LegalName\": \"sample-legalname\",\n  \"RegistrationNumber\": \"sample-registrationnumber\",\n  \"Country\": \"sample-country\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json && json.id) { pm.collectionVariables.set('carrierId', json.id); }",
+                  "pm.test('created', function () { pm.expect([200,201]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Carriers by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/carriers/{{carrierId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "carriers",
+                "{{carrierId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Carriers -> verify",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/carriers/{{carrierId}}/verify",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "carriers",
+                "{{carrierId}}",
+                "verify"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - Planning",
+      "item": [
+        {
+          "name": "Create Planning",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/loads",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "loads"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"OrderId\": \"{{$guid}}\",\n  \"OriginCity\": \"sample-origincity\",\n  \"DestinationCity\": \"sample-destinationcity\",\n  \"WeightKg\": 100\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json && json.id) { pm.collectionVariables.set('loadId', json.id); }",
+                  "pm.test('created', function () { pm.expect([200,201]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Planning by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/loads/{{loadId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "loads",
+                "{{loadId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Planning -> optimize",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/loads/{{loadId}}/optimize",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "loads",
+                "{{loadId}}",
+                "optimize"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 - Tracking",
+      "item": [
+        {
+          "name": "Create Tracking",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/shipments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "shipments"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"LoadId\": \"{{$guid}}\",\n  \"CarrierId\": \"{{$guid}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json && json.id) { pm.collectionVariables.set('shipmentId', json.id); }",
+                  "pm.test('created', function () { pm.expect([200,201]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Tracking by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/shipments/{{shipmentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "shipments",
+                "{{shipmentId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Tracking -> deliver",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/shipments/{{shipmentId}}/deliver",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "shipments",
+                "{{shipmentId}}",
+                "deliver"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 - Billing",
+      "item": [
+        {
+          "name": "Create Billing",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/invoices",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "invoices"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"CustomerId\": \"{{$guid}}\",\n  \"Amount\": 100,\n  \"Currency\": \"sample-currency\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json && json.id) { pm.collectionVariables.set('invoiceId', json.id); }",
+                  "pm.test('created', function () { pm.expect([200,201]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Billing by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/invoices/{{invoiceId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "invoices",
+                "{{invoiceId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Billing -> issue",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/invoices/{{invoiceId}}/issue",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "invoices",
+                "{{invoiceId}}",
+                "issue"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 - Documents",
+      "item": [
+        {
+          "name": "Create Documents",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/documents",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documents"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"OwnerId\": \"{{$guid}}\",\n  \"Category\": \"sample-category\",\n  \"StorageRef\": \"sample-storageref\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json && json.id) { pm.collectionVariables.set('documentId', json.id); }",
+                  "pm.test('created', function () { pm.expect([200,201]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Documents by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/documents/{{documentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documents",
+                "{{documentId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Documents -> verify",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/documents/{{documentId}}/verify",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "documents",
+                "{{documentId}}",
+                "verify"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 - Notifications",
+      "item": [
+        {
+          "name": "Create Notifications",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notifications",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notifications"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"Recipient\": \"sample-recipient\",\n  \"Channel\": \"sample-channel\",\n  \"TemplateId\": \"sample-templateid\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json && json.id) { pm.collectionVariables.set('notificationId', json.id); }",
+                  "pm.test('created', function () { pm.expect([200,201]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Notifications by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/{{notificationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notifications",
+                "{{notificationId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Notifications -> marksent",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/{{notificationId}}/marksent",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notifications",
+                "{{notificationId}}",
+                "marksent"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "09 - Analytics",
+      "item": [
+        {
+          "name": "Create Analytics",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reportdefinitions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reportdefinitions"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"Name\": \"sample-name\",\n  \"Query\": \"sample-query\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json && json.id) { pm.collectionVariables.set('reportDefinitionId', json.id); }",
+                  "pm.test('created', function () { pm.expect([200,201]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Analytics by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reportdefinitions/{{reportDefinitionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reportdefinitions",
+                "{{reportDefinitionId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Analytics -> archive",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/reportdefinitions/{{reportDefinitionId}}/archive",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reportdefinitions",
+                "{{reportDefinitionId}}",
+                "archive"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "10 - Compliance",
+      "item": [
+        {
+          "name": "Create Compliance",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/compliancechecks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "compliancechecks"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"SubjectId\": \"{{$guid}}\",\n  \"RuleCode\": \"sample-rulecode\",\n  \"Jurisdiction\": \"sample-jurisdiction\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json && json.id) { pm.collectionVariables.set('complianceCheckId', json.id); }",
+                  "pm.test('created', function () { pm.expect([200,201]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Compliance by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/compliancechecks/{{complianceCheckId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "compliancechecks",
+                "{{complianceCheckId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Compliance -> pass",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/compliancechecks/{{complianceCheckId}}/pass",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "compliancechecks",
+                "{{complianceCheckId}}",
+                "pass"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "11 - Integration",
+      "item": [
+        {
+          "name": "Create Integration",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/integrationconnectors",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "integrationconnectors"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"SystemName\": \"sample-systemname\",\n  \"Endpoint\": \"sample-endpoint\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json && json.id) { pm.collectionVariables.set('integrationConnectorId', json.id); }",
+                  "pm.test('created', function () { pm.expect([200,201]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Integration by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/integrationconnectors/{{integrationConnectorId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "integrationconnectors",
+                "{{integrationConnectorId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Integration -> activate",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/integrationconnectors/{{integrationConnectorId}}/activate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "integrationconnectors",
+                "{{integrationConnectorId}}",
+                "activate"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "12 - Intelligence",
+      "item": [
+        {
+          "name": "Create Intelligence",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/predictionrequests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "predictionrequests"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ModelId\": \"sample-modelid\",\n  \"PredictionType\": \"sample-predictiontype\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json && json.id) { pm.collectionVariables.set('predictionRequestId', json.id); }",
+                  "pm.test('created', function () { pm.expect([200,201]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Intelligence by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/predictionrequests/{{predictionRequestId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "predictionrequests",
+                "{{predictionRequestId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Intelligence -> complete",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/predictionrequests/{{predictionRequestId}}/complete",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "predictionrequests",
+                "{{predictionRequestId}}",
+                "complete"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

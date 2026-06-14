@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../FleetIQ.Planning.Domain/FleetIQ.Planning.Domain.csproj" />
+    <ProjectReference Include="../../../BuildingBlocks/FleetIQ.BuildingBlocks.Application/FleetIQ.BuildingBlocks.Application.csproj" />
+  </ItemGroup>
+</Project>

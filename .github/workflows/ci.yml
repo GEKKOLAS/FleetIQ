@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Create solution
+        run: bash scripts/init-solution.sh
+
+      - name: Restore
+        run: dotnet restore FleetIQ.sln
+
+      - name: Build
+        run: dotnet build FleetIQ.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test FleetIQ.sln --configuration Release --no-build --verbosity normal

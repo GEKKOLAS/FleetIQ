@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "FleetIQ.Analytics.Api": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:55524;http://localhost:55525"
+    }
+  }
+}

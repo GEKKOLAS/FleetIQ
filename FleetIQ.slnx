@@ -1,0 +1,102 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/BuildingBlocks/">
+    <Project Path="src/BuildingBlocks/FleetIQ.BuildingBlocks.Application/FleetIQ.BuildingBlocks.Application.csproj" />
+    <Project Path="src/BuildingBlocks/FleetIQ.BuildingBlocks.Domain/FleetIQ.BuildingBlocks.Domain.csproj" />
+    <Project Path="src/BuildingBlocks/FleetIQ.BuildingBlocks.Infrastructure/FleetIQ.BuildingBlocks.Infrastructure.csproj" />
+    <Project Path="src/BuildingBlocks/FleetIQ.BuildingBlocks.Web/FleetIQ.BuildingBlocks.Web.csproj" />
+  </Folder>
+  <Folder Name="/src/Gateway/">
+    <Project Path="src/Gateway/FleetIQ.Gateway/FleetIQ.Gateway.csproj" />
+  </Folder>
+  <Folder Name="/src/IdentityServer/">
+    <Project Path="src/IdentityServer/FleetIQ.IdentityServer/FleetIQ.IdentityServer.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/" />
+  <Folder Name="/src/Services/Analytics/">
+    <Project Path="src/Services/Analytics/FleetIQ.Analytics.Api/FleetIQ.Analytics.Api.csproj" />
+    <Project Path="src/Services/Analytics/FleetIQ.Analytics.Application/FleetIQ.Analytics.Application.csproj" />
+    <Project Path="src/Services/Analytics/FleetIQ.Analytics.Domain/FleetIQ.Analytics.Domain.csproj" />
+    <Project Path="src/Services/Analytics/FleetIQ.Analytics.Infrastructure/FleetIQ.Analytics.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/Billing/">
+    <Project Path="src/Services/Billing/FleetIQ.Billing.Api/FleetIQ.Billing.Api.csproj" />
+    <Project Path="src/Services/Billing/FleetIQ.Billing.Application/FleetIQ.Billing.Application.csproj" />
+    <Project Path="src/Services/Billing/FleetIQ.Billing.Domain/FleetIQ.Billing.Domain.csproj" />
+    <Project Path="src/Services/Billing/FleetIQ.Billing.Infrastructure/FleetIQ.Billing.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/Carriers/">
+    <Project Path="src/Services/Carriers/FleetIQ.Carriers.Api/FleetIQ.Carriers.Api.csproj" />
+    <Project Path="src/Services/Carriers/FleetIQ.Carriers.Application/FleetIQ.Carriers.Application.csproj" />
+    <Project Path="src/Services/Carriers/FleetIQ.Carriers.Domain/FleetIQ.Carriers.Domain.csproj" />
+    <Project Path="src/Services/Carriers/FleetIQ.Carriers.Infrastructure/FleetIQ.Carriers.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/Compliance/">
+    <Project Path="src/Services/Compliance/FleetIQ.Compliance.Api/FleetIQ.Compliance.Api.csproj" />
+    <Project Path="src/Services/Compliance/FleetIQ.Compliance.Application/FleetIQ.Compliance.Application.csproj" />
+    <Project Path="src/Services/Compliance/FleetIQ.Compliance.Domain/FleetIQ.Compliance.Domain.csproj" />
+    <Project Path="src/Services/Compliance/FleetIQ.Compliance.Infrastructure/FleetIQ.Compliance.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/Documents/">
+    <Project Path="src/Services/Documents/FleetIQ.Documents.Api/FleetIQ.Documents.Api.csproj" />
+    <Project Path="src/Services/Documents/FleetIQ.Documents.Application/FleetIQ.Documents.Application.csproj" />
+    <Project Path="src/Services/Documents/FleetIQ.Documents.Domain/FleetIQ.Documents.Domain.csproj" />
+    <Project Path="src/Services/Documents/FleetIQ.Documents.Infrastructure/FleetIQ.Documents.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/Identity/">
+    <Project Path="src/Services/Identity/FleetIQ.Identity.Api/FleetIQ.Identity.Api.csproj" />
+    <Project Path="src/Services/Identity/FleetIQ.Identity.Application/FleetIQ.Identity.Application.csproj" />
+    <Project Path="src/Services/Identity/FleetIQ.Identity.Domain/FleetIQ.Identity.Domain.csproj" />
+    <Project Path="src/Services/Identity/FleetIQ.Identity.Infrastructure/FleetIQ.Identity.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/Integration/">
+    <Project Path="src/Services/Integration/FleetIQ.Integration.Api/FleetIQ.Integration.Api.csproj" />
+    <Project Path="src/Services/Integration/FleetIQ.Integration.Application/FleetIQ.Integration.Application.csproj" />
+    <Project Path="src/Services/Integration/FleetIQ.Integration.Domain/FleetIQ.Integration.Domain.csproj" />
+    <Project Path="src/Services/Integration/FleetIQ.Integration.Infrastructure/FleetIQ.Integration.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/Intelligence/">
+    <Project Path="src/Services/Intelligence/FleetIQ.Intelligence.Api/FleetIQ.Intelligence.Api.csproj" />
+    <Project Path="src/Services/Intelligence/FleetIQ.Intelligence.Application/FleetIQ.Intelligence.Application.csproj" />
+    <Project Path="src/Services/Intelligence/FleetIQ.Intelligence.Domain/FleetIQ.Intelligence.Domain.csproj" />
+    <Project Path="src/Services/Intelligence/FleetIQ.Intelligence.Infrastructure/FleetIQ.Intelligence.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/Notifications/">
+    <Project Path="src/Services/Notifications/FleetIQ.Notifications.Api/FleetIQ.Notifications.Api.csproj" />
+    <Project Path="src/Services/Notifications/FleetIQ.Notifications.Application/FleetIQ.Notifications.Application.csproj" />
+    <Project Path="src/Services/Notifications/FleetIQ.Notifications.Domain/FleetIQ.Notifications.Domain.csproj" />
+    <Project Path="src/Services/Notifications/FleetIQ.Notifications.Infrastructure/FleetIQ.Notifications.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/Orders/">
+    <Project Path="src/Services/Orders/FleetIQ.Orders.Api/FleetIQ.Orders.Api.csproj" />
+    <Project Path="src/Services/Orders/FleetIQ.Orders.Application/FleetIQ.Orders.Application.csproj" />
+    <Project Path="src/Services/Orders/FleetIQ.Orders.Domain/FleetIQ.Orders.Domain.csproj" />
+    <Project Path="src/Services/Orders/FleetIQ.Orders.Infrastructure/FleetIQ.Orders.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/Planning/">
+    <Project Path="src/Services/Planning/FleetIQ.Planning.Api/FleetIQ.Planning.Api.csproj" />
+    <Project Path="src/Services/Planning/FleetIQ.Planning.Application/FleetIQ.Planning.Application.csproj" />
+    <Project Path="src/Services/Planning/FleetIQ.Planning.Domain/FleetIQ.Planning.Domain.csproj" />
+    <Project Path="src/Services/Planning/FleetIQ.Planning.Infrastructure/FleetIQ.Planning.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Services/Tracking/">
+    <Project Path="src/Services/Tracking/FleetIQ.Tracking.Api/FleetIQ.Tracking.Api.csproj" />
+    <Project Path="src/Services/Tracking/FleetIQ.Tracking.Application/FleetIQ.Tracking.Application.csproj" />
+    <Project Path="src/Services/Tracking/FleetIQ.Tracking.Domain/FleetIQ.Tracking.Domain.csproj" />
+    <Project Path="src/Services/Tracking/FleetIQ.Tracking.Infrastructure/FleetIQ.Tracking.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/FleetIQ.Analytics.UnitTests/FleetIQ.Analytics.UnitTests.csproj" />
+    <Project Path="tests/FleetIQ.Billing.UnitTests/FleetIQ.Billing.UnitTests.csproj" />
+    <Project Path="tests/FleetIQ.Carriers.UnitTests/FleetIQ.Carriers.UnitTests.csproj" />
+    <Project Path="tests/FleetIQ.Compliance.UnitTests/FleetIQ.Compliance.UnitTests.csproj" />
+    <Project Path="tests/FleetIQ.Documents.UnitTests/FleetIQ.Documents.UnitTests.csproj" />
+    <Project Path="tests/FleetIQ.Identity.UnitTests/FleetIQ.Identity.UnitTests.csproj" />
+    <Project Path="tests/FleetIQ.Integration.UnitTests/FleetIQ.Integration.UnitTests.csproj" />
+    <Project Path="tests/FleetIQ.Intelligence.UnitTests/FleetIQ.Intelligence.UnitTests.csproj" />
+    <Project Path="tests/FleetIQ.Notifications.UnitTests/FleetIQ.Notifications.UnitTests.csproj" />
+    <Project Path="tests/FleetIQ.Orders.UnitTests/FleetIQ.Orders.UnitTests.csproj" />
+    <Project Path="tests/FleetIQ.Planning.UnitTests/FleetIQ.Planning.UnitTests.csproj" />
+    <Project Path="tests/FleetIQ.Tracking.UnitTests/FleetIQ.Tracking.UnitTests.csproj" />
+  </Folder>
+</Solution>
