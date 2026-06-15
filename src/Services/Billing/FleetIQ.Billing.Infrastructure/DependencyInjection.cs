@@ -1,4 +1,5 @@
 using FleetIQ.BuildingBlocks.Application;
+using FleetIQ.BuildingBlocks.Infrastructure.Messaging;
 using FleetIQ.BuildingBlocks.Infrastructure.Outbox;
 using FleetIQ.Billing.Application.Abstractions;
 using FleetIQ.Billing.Infrastructure.Persistence;
@@ -16,6 +17,7 @@ public static class DependencyInjection
         services.AddDbContext<BillingDbContext>(o => o.UseNpgsql(config.GetConnectionString("Billing")));
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<BillingDbContext>());
         services.AddScoped<IInvoiceRepository, InvoiceRepository>();
+        services.AddScoped<IIntegrationEventPublisher, MassTransitIntegrationEventPublisher>();
         services.AddHostedService<OutboxProcessor<BillingDbContext>>();
 
         services.AddMassTransit(x =>

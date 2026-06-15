@@ -10,4 +10,13 @@ public sealed class NotificationRepository(NotificationsDbContext db) : INotific
 
     public Task<Notification?> GetByIdAsync(Guid id, CancellationToken ct) =>
         db.Notifications.FirstOrDefaultAsync(x => x.Id == id, ct);
+
+    public async Task<IReadOnlyList<Notification>> ListRecentAsync(int take, CancellationToken ct)
+    {
+        take = take is < 1 or > 100 ? 20 : take;
+        return await db.Notifications.AsNoTracking()
+            .OrderByDescending(n => n.CreatedOnUtc)
+            .Take(take)
+            .ToListAsync(ct);
+    }
 }

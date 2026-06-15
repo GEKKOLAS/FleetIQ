@@ -6,6 +6,9 @@
     <Project Path="src/BuildingBlocks/FleetIQ.BuildingBlocks.Infrastructure/FleetIQ.BuildingBlocks.Infrastructure.csproj" />
     <Project Path="src/BuildingBlocks/FleetIQ.BuildingBlocks.Web/FleetIQ.BuildingBlocks.Web.csproj" />
   </Folder>
+  <Folder Name="/src/Contracts/">
+    <Project Path="src/Contracts/FleetIQ.Contracts/FleetIQ.Contracts.csproj" />
+  </Folder>
   <Folder Name="/src/Gateway/">
     <Project Path="src/Gateway/FleetIQ.Gateway/FleetIQ.Gateway.csproj" />
   </Folder>

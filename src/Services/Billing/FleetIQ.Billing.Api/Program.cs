@@ -3,11 +3,11 @@ using FleetIQ.Billing.Api.Endpoints;
 using FleetIQ.Billing.Application.CreateInvoice;
 using FleetIQ.Billing.Infrastructure;
 using FleetIQ.Billing.Infrastructure.Persistence;
+using FleetIQ.BuildingBlocks.Web;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
-using FleetIQ.BuildingBlocks.Web;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,6 +20,7 @@ var applicationAssembly = typeof(CreateInvoiceCommand).Assembly;
 builder.Services.AddValidatorsFromAssembly(applicationAssembly);
 RegisterHandlers(builder.Services, applicationAssembly);
 
+builder.Services.AddProblemDetails();           // RFC 7807 error responses
 builder.Services.AddHealthChecks();
 builder.Services.AddFleetIqSwagger();
 builder.Services.AddFleetIqJwtAuth(builder.Configuration);
@@ -30,12 +31,14 @@ builder.Services.AddOpenTelemetry()
 
 var app = builder.Build();
 
+app.UseExceptionHandler();                       // unhandled exceptions -> ProblemDetails
+
 if (app.Environment.IsDevelopment())
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<BillingDbContext>();
-        db.Database.Migrate();
-        await SeedData.SeedAsync(db);
+    db.Database.Migrate();
+    await SeedData.SeedAsync(db);
     app.MapFleetIqSwagger();
 }
 

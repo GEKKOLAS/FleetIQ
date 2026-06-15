@@ -29,24 +29,34 @@ namespace FleetIQ.Billing.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("numeric");
-
                     b.Property<DateTime>("CreatedOnUtc")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Currency")
                         .IsRequired()
-                        .HasMaxLength(400)
-                        .HasColumnType("character varying(400)");
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)");
 
                     b.Property<Guid>("CustomerId")
                         .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DueDateUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("IssuedOnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("PaidOnUtc")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("Status");
 
                     b.ToTable("invoices", "billing");
                 });
@@ -79,6 +89,69 @@ namespace FleetIQ.Billing.Infrastructure.Persistence.Migrations
                     b.HasIndex("ProcessedOnUtc");
 
                     b.ToTable("outbox_messages", "billing");
+                });
+
+            modelBuilder.Entity("FleetIQ.Billing.Domain.Invoice", b =>
+                {
+                    b.OwnsMany("FleetIQ.Billing.Domain.InvoiceLine", "Lines", b1 =>
+                        {
+                            b1.Property<Guid>("Id")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Description")
+                                .IsRequired()
+                                .HasMaxLength(250)
+                                .HasColumnType("character varying(250)");
+
+                            b1.Property<Guid>("InvoiceId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<int>("Quantity")
+                                .HasColumnType("integer");
+
+                            b1.Property<decimal>("UnitPrice")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)");
+
+                            b1.HasKey("Id");
+
+                            b1.HasIndex("InvoiceId");
+
+                            b1.ToTable("invoice_lines", "billing");
+
+                            b1.WithOwner()
+                                .HasForeignKey("InvoiceId");
+                        });
+
+                    b.OwnsOne("FleetIQ.Billing.Domain.Money", "Total", b1 =>
+                        {
+                            b1.Property<Guid>("InvoiceId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("total_amount");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .HasMaxLength(3)
+                                .HasColumnType("character varying(3)")
+                                .HasColumnName("total_currency");
+
+                            b1.HasKey("InvoiceId");
+
+                            b1.ToTable("invoices", "billing");
+
+                            b1.WithOwner()
+                                .HasForeignKey("InvoiceId");
+                        });
+
+                    b.Navigation("Lines");
+
+                    b.Navigation("Total")
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

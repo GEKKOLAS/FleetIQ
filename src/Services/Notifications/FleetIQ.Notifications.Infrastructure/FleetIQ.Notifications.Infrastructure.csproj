@@ -5,10 +5,10 @@
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
     <PackageReference Include="MassTransit" />
     <PackageReference Include="MassTransit.RabbitMQ" />
-    <PackageReference Include="System.Security.Cryptography.Xml" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../FleetIQ.Notifications.Application/FleetIQ.Notifications.Application.csproj" />
     <ProjectReference Include="../../../BuildingBlocks/FleetIQ.BuildingBlocks.Infrastructure/FleetIQ.BuildingBlocks.Infrastructure.csproj" />
+    <ProjectReference Include="../../../Contracts/FleetIQ.Contracts/FleetIQ.Contracts.csproj" />
   </ItemGroup>
 </Project>

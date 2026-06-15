@@ -17,18 +17,36 @@ public sealed class BillingDbContext(DbContextOptions<BillingDbContext> options)
     {
         modelBuilder.HasDefaultSchema("billing");
 
-        var e = modelBuilder.Entity<Invoice>();
-        e.ToTable("invoices");
-        e.HasKey(x => x.Id);
-        e.Property(x => x.Status).HasConversion<int>();
-        e.Property(x => x.Currency).HasMaxLength(400);
+        var invoice = modelBuilder.Entity<Invoice>();
+        invoice.ToTable("invoices");
+        invoice.HasKey(x => x.Id);
+        invoice.Property(x => x.Currency).HasMaxLength(3);
+        invoice.Property(x => x.Status).HasConversion<int>();
+        invoice.HasIndex(x => x.CustomerId);
+        invoice.HasIndex(x => x.Status);
 
-        var o = modelBuilder.Entity<OutboxMessage>();
-        o.ToTable("outbox_messages");
-        o.HasKey(x => x.Id);
-        o.Property(x => x.Type).IsRequired();
-        o.Property(x => x.Content).IsRequired();
-        o.HasIndex(x => x.ProcessedOnUtc);
+        invoice.OwnsOne(x => x.Total, money =>
+        {
+            money.Property(p => p.Amount).HasColumnName("total_amount").HasPrecision(18, 2);
+            money.Property(p => p.Currency).HasColumnName("total_currency").HasMaxLength(3);
+        });
+
+        invoice.OwnsMany(x => x.Lines, line =>
+        {
+            line.ToTable("invoice_lines");
+            line.WithOwner().HasForeignKey("InvoiceId");
+            line.HasKey("Id");
+            line.Property(p => p.Description).HasMaxLength(250);
+            line.Property(p => p.UnitPrice).HasPrecision(18, 2);
+            line.Ignore(p => p.LineTotal); // computed, not stored
+        });
+
+        var outbox = modelBuilder.Entity<OutboxMessage>();
+        outbox.ToTable("outbox_messages");
+        outbox.HasKey(x => x.Id);
+        outbox.Property(x => x.Type).IsRequired();
+        outbox.Property(x => x.Content).IsRequired();
+        outbox.HasIndex(x => x.ProcessedOnUtc);
 
         base.OnModelCreating(modelBuilder);
     }
