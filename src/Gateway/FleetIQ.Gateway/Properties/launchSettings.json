@@ -1,12 +1,13 @@
 {
+  "$schema": "https://json.schemastore.org/launchsettings.json",
   "profiles": {
-    "FleetIQ.Gateway": {
+    "Gateway": {
       "commandName": "Project",
-      "launchBrowser": true,
+      "launchBrowser": false,
+      "applicationUrl": "http://localhost:5080",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
-      },
-      "applicationUrl": "https://localhost:55515;http://localhost:55516"
+      }
     }
   }
 }

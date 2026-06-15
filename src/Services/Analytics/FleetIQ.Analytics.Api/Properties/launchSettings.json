@@ -1,12 +1,13 @@
 {
+  "$schema": "https://json.schemastore.org/launchsettings.json",
   "profiles": {
-    "FleetIQ.Analytics.Api": {
+    "Analytics": {
       "commandName": "Project",
-      "launchBrowser": true,
+      "launchBrowser": false,
+      "applicationUrl": "https://localhost:5089",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
-      },
-      "applicationUrl": "https://localhost:55524;http://localhost:55525"
+      }
     }
   }
 }

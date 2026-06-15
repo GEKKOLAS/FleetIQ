@@ -1,12 +1,13 @@
 {
+  "$schema": "https://json.schemastore.org/launchsettings.json",
   "profiles": {
-    "FleetIQ.Compliance.Api": {
+    "Compliance": {
       "commandName": "Project",
-      "launchBrowser": true,
+      "launchBrowser": false,
+      "applicationUrl": "https://localhost:5090",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
-      },
-      "applicationUrl": "https://localhost:55519;http://localhost:55521"
+      }
     }
   }
 }
