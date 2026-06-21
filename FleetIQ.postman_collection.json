@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "FleetIQ API (all services via gateway)",
-    "description": "Run '0 - Get Token' first; the bearer token is stored and reused. All calls go through the YARP gateway on {{baseUrl}}. In Postman Settings, turn OFF 'SSL certificate verification' for the local dev certs.",
+    "description": "Run '0 - Get Token' first. Orders (01) and Billing (06) are the complete rich services. Turn OFF SSL verification in Postman settings.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -17,78 +17,67 @@
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:5080",
-      "type": "string"
+      "value": "http://localhost:5080"
     },
     {
       "key": "idpUrl",
-      "value": "https://localhost:5001",
-      "type": "string"
+      "value": "https://localhost:5001"
     },
     {
       "key": "token",
-      "value": "",
-      "type": "string"
+      "value": ""
     },
     {
-      "key": "ordersId",
-      "value": "",
-      "type": "string"
+      "key": "customerId",
+      "value": "22222222-2222-2222-2222-222222222222"
     },
     {
-      "key": "userAccountId",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "carrierId",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "loadId",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "shipmentId",
-      "value": "",
-      "type": "string"
+      "key": "orderId",
+      "value": ""
     },
     {
       "key": "invoiceId",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "documentId",
-      "value": "",
-      "type": "string"
+      "value": ""
     },
     {
       "key": "notificationId",
-      "value": "",
-      "type": "string"
+      "value": ""
+    },
+    {
+      "key": "userAccountId",
+      "value": ""
+    },
+    {
+      "key": "carrierId",
+      "value": ""
+    },
+    {
+      "key": "loadId",
+      "value": ""
+    },
+    {
+      "key": "shipmentId",
+      "value": ""
+    },
+    {
+      "key": "documentId",
+      "value": ""
     },
     {
       "key": "reportDefinitionId",
-      "value": "",
-      "type": "string"
+      "value": ""
     },
     {
       "key": "complianceCheckId",
-      "value": "",
-      "type": "string"
+      "value": ""
     },
     {
       "key": "integrationConnectorId",
-      "value": "",
-      "type": "string"
+      "value": ""
     },
     {
       "key": "predictionRequestId",
-      "value": "",
-      "type": "string"
+      "value": ""
     }
   ],
   "item": [
@@ -143,21 +132,18 @@
           "script": {
             "type": "text/javascript",
             "exec": [
-              "var json = pm.response.json();",
-              "if (json && json.access_token) {",
-              "    pm.collectionVariables.set('token', json.access_token);",
-              "    console.log('Token saved');",
-              "}"
+              "var j=pm.response.json();",
+              "if(j&&j.access_token){pm.collectionVariables.set('token',j.access_token);console.log('token saved');}"
             ]
           }
         }
       ]
     },
     {
-      "name": "01 - Orders",
+      "name": "01 - Orders (complete service)",
       "item": [
         {
-          "name": "Create Orders",
+          "name": "Create Order",
           "request": {
             "method": "POST",
             "header": [
@@ -177,7 +163,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"customerId\": \"{{$guid}}\",\n  \"pickup\": {\n    \"street\": \"1 Main St\",\n    \"city\": \"Lisbon\",\n    \"postalCode\": \"1000-001\",\n    \"country\": \"PT\"\n  },\n  \"delivery\": {\n    \"street\": \"5 Park Ave\",\n    \"city\": \"Porto\",\n    \"postalCode\": \"4000-002\",\n    \"country\": \"PT\"\n  },\n  \"items\": [\n    {\n      \"description\": \"Pallet\",\n      \"quantity\": 2,\n      \"weightKg\": 120\n    }\n  ]\n}",
+              "raw": "{\n  \"customerId\": \"{{customerId}}\",\n  \"pickup\": {\n    \"street\": \"1 Main St\",\n    \"city\": \"Lisbon\",\n    \"postalCode\": \"1000-001\",\n    \"country\": \"PT\"\n  },\n  \"delivery\": {\n    \"street\": \"5 Park Ave\",\n    \"city\": \"Porto\",\n    \"postalCode\": \"4000-002\",\n    \"country\": \"PT\"\n  },\n  \"items\": [\n    {\n      \"description\": \"Pallet\",\n      \"quantity\": 2,\n      \"weightKg\": 120\n    }\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -191,27 +177,143 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "var json = pm.response.json();",
-                  "if (json && json.id) { pm.collectionVariables.set('ordersId', json.id); }",
-                  "pm.test('created', function () { pm.expect([200,201]).to.include(pm.response.code); });"
+                  "var j=pm.response.json();",
+                  "if(j&&j.id) pm.collectionVariables.set('orderId',j.id);",
+                  "pm.test('ok',function(){pm.expect([200,201,204]).to.include(pm.response.code);});"
                 ]
               }
             }
           ]
         },
         {
-          "name": "Get Orders by id",
+          "name": "Get Order",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/orders/{{ordersId}}",
+              "raw": "{{baseUrl}}/orders/{{orderId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "orders",
-                "{{ordersId}}"
+                "{{orderId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Orders (paged/filtered)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/orders?customerId={{customerId}}&page=1&pageSize=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders"
+              ],
+              "query": [
+                {
+                  "key": "customerId",
+                  "value": "{{customerId}}"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Add Item",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}/items",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{orderId}}",
+                "items"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Box\",\n  \"quantity\": 3,\n  \"weightKg\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Confirm Order",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}/confirm",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{orderId}}",
+                "confirm"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Ready for Planning",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}/ready-for-planning",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{orderId}}",
+                "ready-for-planning"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cancel Order  (409 if ready)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{orderId}}",
+                "cancel"
               ]
             }
           }
@@ -222,7 +324,7 @@
       "name": "02 - Identity",
       "item": [
         {
-          "name": "Create Identity",
+          "name": "Create",
           "request": {
             "method": "POST",
             "header": [
@@ -256,16 +358,16 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "var json = pm.response.json();",
-                  "if (json && json.id) { pm.collectionVariables.set('userAccountId', json.id); }",
-                  "pm.test('created', function () { pm.expect([200,201]).to.include(pm.response.code); });"
+                  "var j=pm.response.json();",
+                  "if(j&&j.id) pm.collectionVariables.set('userAccountId',j.id);",
+                  "pm.test('ok',function(){pm.expect([200,201,204]).to.include(pm.response.code);});"
                 ]
               }
             }
           ]
         },
         {
-          "name": "Get Identity by id",
+          "name": "Get by id",
           "request": {
             "method": "GET",
             "header": [],
@@ -282,7 +384,7 @@
           }
         },
         {
-          "name": "Identity -> activate",
+          "name": "Activate",
           "request": {
             "method": "POST",
             "header": [],
@@ -305,7 +407,7 @@
       "name": "03 - Carriers",
       "item": [
         {
-          "name": "Create Carriers",
+          "name": "Create",
           "request": {
             "method": "POST",
             "header": [
@@ -339,16 +441,16 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "var json = pm.response.json();",
-                  "if (json && json.id) { pm.collectionVariables.set('carrierId', json.id); }",
-                  "pm.test('created', function () { pm.expect([200,201]).to.include(pm.response.code); });"
+                  "var j=pm.response.json();",
+                  "if(j&&j.id) pm.collectionVariables.set('carrierId',j.id);",
+                  "pm.test('ok',function(){pm.expect([200,201,204]).to.include(pm.response.code);});"
                 ]
               }
             }
           ]
         },
         {
-          "name": "Get Carriers by id",
+          "name": "Get by id",
           "request": {
             "method": "GET",
             "header": [],
@@ -365,7 +467,7 @@
           }
         },
         {
-          "name": "Carriers -> verify",
+          "name": "Verify",
           "request": {
             "method": "POST",
             "header": [],
@@ -388,7 +490,7 @@
       "name": "04 - Planning",
       "item": [
         {
-          "name": "Create Planning",
+          "name": "Create",
           "request": {
             "method": "POST",
             "header": [
@@ -422,16 +524,16 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "var json = pm.response.json();",
-                  "if (json && json.id) { pm.collectionVariables.set('loadId', json.id); }",
-                  "pm.test('created', function () { pm.expect([200,201]).to.include(pm.response.code); });"
+                  "var j=pm.response.json();",
+                  "if(j&&j.id) pm.collectionVariables.set('loadId',j.id);",
+                  "pm.test('ok',function(){pm.expect([200,201,204]).to.include(pm.response.code);});"
                 ]
               }
             }
           ]
         },
         {
-          "name": "Get Planning by id",
+          "name": "Get by id",
           "request": {
             "method": "GET",
             "header": [],
@@ -448,7 +550,7 @@
           }
         },
         {
-          "name": "Planning -> optimize",
+          "name": "Optimize",
           "request": {
             "method": "POST",
             "header": [],
@@ -471,7 +573,7 @@
       "name": "05 - Tracking",
       "item": [
         {
-          "name": "Create Tracking",
+          "name": "Create",
           "request": {
             "method": "POST",
             "header": [
@@ -505,16 +607,16 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "var json = pm.response.json();",
-                  "if (json && json.id) { pm.collectionVariables.set('shipmentId', json.id); }",
-                  "pm.test('created', function () { pm.expect([200,201]).to.include(pm.response.code); });"
+                  "var j=pm.response.json();",
+                  "if(j&&j.id) pm.collectionVariables.set('shipmentId',j.id);",
+                  "pm.test('ok',function(){pm.expect([200,201,204]).to.include(pm.response.code);});"
                 ]
               }
             }
           ]
         },
         {
-          "name": "Get Tracking by id",
+          "name": "Get by id",
           "request": {
             "method": "GET",
             "header": [],
@@ -531,7 +633,7 @@
           }
         },
         {
-          "name": "Tracking -> deliver",
+          "name": "Deliver",
           "request": {
             "method": "POST",
             "header": [],
@@ -551,10 +653,10 @@
       ]
     },
     {
-      "name": "06 - Billing",
+      "name": "06 - Billing (complete service)",
       "item": [
         {
-          "name": "Create Billing",
+          "name": "Create Invoice",
           "request": {
             "method": "POST",
             "header": [
@@ -574,7 +676,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"CustomerId\": \"{{$guid}}\",\n  \"Amount\": 100,\n  \"Currency\": \"sample-currency\"\n}",
+              "raw": "{\n  \"customerId\": \"{{customerId}}\",\n  \"currency\": \"EUR\",\n  \"lines\": [\n    {\n      \"description\": \"Freight\",\n      \"quantity\": 1,\n      \"unitPrice\": 850.0\n    },\n    {\n      \"description\": \"Fuel\",\n      \"quantity\": 1,\n      \"unitPrice\": 120.5\n    }\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -588,16 +690,16 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "var json = pm.response.json();",
-                  "if (json && json.id) { pm.collectionVariables.set('invoiceId', json.id); }",
-                  "pm.test('created', function () { pm.expect([200,201]).to.include(pm.response.code); });"
+                  "var j=pm.response.json();",
+                  "if(j&&j.id) pm.collectionVariables.set('invoiceId',j.id);",
+                  "pm.test('ok',function(){pm.expect([200,201,204]).to.include(pm.response.code);});"
                 ]
               }
             }
           ]
         },
         {
-          "name": "Get Billing by id",
+          "name": "Get Invoice",
           "request": {
             "method": "GET",
             "header": [],
@@ -614,10 +716,81 @@
           }
         },
         {
-          "name": "Billing -> issue",
+          "name": "List Invoices",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/invoices?customerId={{customerId}}&page=1&pageSize=20&sort=created_desc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "invoices"
+              ],
+              "query": [
+                {
+                  "key": "customerId",
+                  "value": "{{customerId}}"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20"
+                },
+                {
+                  "key": "sort",
+                  "value": "created_desc"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Add Line",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/invoices/{{invoiceId}}/lines",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "invoices",
+                "{{invoiceId}}",
+                "lines"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Detention\",\n  \"quantity\": 2,\n  \"unitPrice\": 45.0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Issue Invoice (fires event)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/invoices/{{invoiceId}}/issue",
               "host": [
@@ -628,6 +801,51 @@
                 "{{invoiceId}}",
                 "issue"
               ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dueDateUtc\": \"2026-12-31T00:00:00Z\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Record Payment",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/invoices/{{invoiceId}}/payment",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "invoices",
+                "{{invoiceId}}",
+                "payment"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cancel Invoice",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/invoices/{{invoiceId}}/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "invoices",
+                "{{invoiceId}}",
+                "cancel"
+              ]
             }
           }
         }
@@ -637,7 +855,7 @@
       "name": "07 - Documents",
       "item": [
         {
-          "name": "Create Documents",
+          "name": "Create",
           "request": {
             "method": "POST",
             "header": [
@@ -671,16 +889,16 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "var json = pm.response.json();",
-                  "if (json && json.id) { pm.collectionVariables.set('documentId', json.id); }",
-                  "pm.test('created', function () { pm.expect([200,201]).to.include(pm.response.code); });"
+                  "var j=pm.response.json();",
+                  "if(j&&j.id) pm.collectionVariables.set('documentId',j.id);",
+                  "pm.test('ok',function(){pm.expect([200,201,204]).to.include(pm.response.code);});"
                 ]
               }
             }
           ]
         },
         {
-          "name": "Get Documents by id",
+          "name": "Get by id",
           "request": {
             "method": "GET",
             "header": [],
@@ -697,7 +915,7 @@
           }
         },
         {
-          "name": "Documents -> verify",
+          "name": "Verify",
           "request": {
             "method": "POST",
             "header": [],
@@ -720,7 +938,7 @@
       "name": "08 - Notifications",
       "item": [
         {
-          "name": "Create Notifications",
+          "name": "Create",
           "request": {
             "method": "POST",
             "header": [
@@ -740,7 +958,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"Recipient\": \"sample-recipient\",\n  \"Channel\": \"sample-channel\",\n  \"TemplateId\": \"sample-templateid\"\n}",
+              "raw": "{\n  \"recipient\": \"ops@fleetiq.io\",\n  \"channel\": \"Email\",\n  \"templateId\": \"manual\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -754,16 +972,38 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "var json = pm.response.json();",
-                  "if (json && json.id) { pm.collectionVariables.set('notificationId', json.id); }",
-                  "pm.test('created', function () { pm.expect([200,201]).to.include(pm.response.code); });"
+                  "var j=pm.response.json();",
+                  "if(j&&j.id) pm.collectionVariables.set('notificationId',j.id);",
+                  "pm.test('ok',function(){pm.expect([200,201,204]).to.include(pm.response.code);});"
                 ]
               }
             }
           ]
         },
         {
-          "name": "Get Notifications by id",
+          "name": "List Notifications (see consumed events)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notifications?take=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notifications"
+              ],
+              "query": [
+                {
+                  "key": "take",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get by id",
           "request": {
             "method": "GET",
             "header": [],
@@ -780,7 +1020,7 @@
           }
         },
         {
-          "name": "Notifications -> marksent",
+          "name": "Marksent",
           "request": {
             "method": "POST",
             "header": [],
@@ -803,7 +1043,7 @@
       "name": "09 - Analytics",
       "item": [
         {
-          "name": "Create Analytics",
+          "name": "Create",
           "request": {
             "method": "POST",
             "header": [
@@ -837,16 +1077,16 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "var json = pm.response.json();",
-                  "if (json && json.id) { pm.collectionVariables.set('reportDefinitionId', json.id); }",
-                  "pm.test('created', function () { pm.expect([200,201]).to.include(pm.response.code); });"
+                  "var j=pm.response.json();",
+                  "if(j&&j.id) pm.collectionVariables.set('reportDefinitionId',j.id);",
+                  "pm.test('ok',function(){pm.expect([200,201,204]).to.include(pm.response.code);});"
                 ]
               }
             }
           ]
         },
         {
-          "name": "Get Analytics by id",
+          "name": "Get by id",
           "request": {
             "method": "GET",
             "header": [],
@@ -863,7 +1103,7 @@
           }
         },
         {
-          "name": "Analytics -> archive",
+          "name": "Archive",
           "request": {
             "method": "POST",
             "header": [],
@@ -886,7 +1126,7 @@
       "name": "10 - Compliance",
       "item": [
         {
-          "name": "Create Compliance",
+          "name": "Create",
           "request": {
             "method": "POST",
             "header": [
@@ -920,16 +1160,16 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "var json = pm.response.json();",
-                  "if (json && json.id) { pm.collectionVariables.set('complianceCheckId', json.id); }",
-                  "pm.test('created', function () { pm.expect([200,201]).to.include(pm.response.code); });"
+                  "var j=pm.response.json();",
+                  "if(j&&j.id) pm.collectionVariables.set('complianceCheckId',j.id);",
+                  "pm.test('ok',function(){pm.expect([200,201,204]).to.include(pm.response.code);});"
                 ]
               }
             }
           ]
         },
         {
-          "name": "Get Compliance by id",
+          "name": "Get by id",
           "request": {
             "method": "GET",
             "header": [],
@@ -946,7 +1186,7 @@
           }
         },
         {
-          "name": "Compliance -> pass",
+          "name": "Pass",
           "request": {
             "method": "POST",
             "header": [],
@@ -969,7 +1209,7 @@
       "name": "11 - Integration",
       "item": [
         {
-          "name": "Create Integration",
+          "name": "Create",
           "request": {
             "method": "POST",
             "header": [
@@ -1003,16 +1243,16 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "var json = pm.response.json();",
-                  "if (json && json.id) { pm.collectionVariables.set('integrationConnectorId', json.id); }",
-                  "pm.test('created', function () { pm.expect([200,201]).to.include(pm.response.code); });"
+                  "var j=pm.response.json();",
+                  "if(j&&j.id) pm.collectionVariables.set('integrationConnectorId',j.id);",
+                  "pm.test('ok',function(){pm.expect([200,201,204]).to.include(pm.response.code);});"
                 ]
               }
             }
           ]
         },
         {
-          "name": "Get Integration by id",
+          "name": "Get by id",
           "request": {
             "method": "GET",
             "header": [],
@@ -1029,7 +1269,7 @@
           }
         },
         {
-          "name": "Integration -> activate",
+          "name": "Activate",
           "request": {
             "method": "POST",
             "header": [],
@@ -1052,7 +1292,7 @@
       "name": "12 - Intelligence",
       "item": [
         {
-          "name": "Create Intelligence",
+          "name": "Create",
           "request": {
             "method": "POST",
             "header": [
@@ -1086,16 +1326,16 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "var json = pm.response.json();",
-                  "if (json && json.id) { pm.collectionVariables.set('predictionRequestId', json.id); }",
-                  "pm.test('created', function () { pm.expect([200,201]).to.include(pm.response.code); });"
+                  "var j=pm.response.json();",
+                  "if(j&&j.id) pm.collectionVariables.set('predictionRequestId',j.id);",
+                  "pm.test('ok',function(){pm.expect([200,201,204]).to.include(pm.response.code);});"
                 ]
               }
             }
           ]
         },
         {
-          "name": "Get Intelligence by id",
+          "name": "Get by id",
           "request": {
             "method": "GET",
             "header": [],
@@ -1112,7 +1352,7 @@
           }
         },
         {
-          "name": "Intelligence -> complete",
+          "name": "Complete",
           "request": {
             "method": "POST",
             "header": [],
