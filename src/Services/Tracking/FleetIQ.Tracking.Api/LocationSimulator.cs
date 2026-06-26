@@ -1,3 +1,5 @@
+using FleetIQ.BuildingBlocks.Application;
+using FleetIQ.Tracking.Api.Hubs;
 using FleetIQ.Tracking.Application.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -5,8 +7,11 @@ using Microsoft.Extensions.Logging;
 
 namespace FleetIQ.Tracking.Api;
 
-/// <summary>Dev-only: broadcasts simulated positions for active shipments along a Lisbon -> Porto route.
-/// READ-ONLY against the DB (no writes) so it never competes with the endpoints for row locks.</summary>
+/// <summary>Dev-only: walks active shipments along a Lisbon -> Porto route every 2s.
+/// Each tick uses its own DI scope, loads each active shipment tracked, records the new
+/// location (advancing Dispatched -> InTransit and persisting the position) and broadcasts
+/// it over SignalR. RecordLocation only updates scalar columns (no child rows), so it never
+/// touches the child-collection insert path.</summary>
 public sealed class LocationSimulator(IServiceScopeFactory scopeFactory, ILogger<LocationSimulator> logger) : BackgroundService
 {
     private static readonly (double Lat, double Lng)[] Route =
@@ -24,16 +29,28 @@ public sealed class LocationSimulator(IServiceScopeFactory scopeFactory, ILogger
             {
                 await using var scope = scopeFactory.CreateAsyncScope();
                 var repo = scope.ServiceProvider.GetRequiredService<IShipmentRepository>();
+                var uow = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
                 var broadcaster = scope.ServiceProvider.GetRequiredService<IShipmentLocationBroadcaster>();
 
-                var active = await repo.GetActiveAsync(stoppingToken); // read-only
+                var activeIds = (await repo.GetActiveAsync(stoppingToken)).Select(s => s.Id).ToList();
                 var wp = Route[step % Route.Length];
-                foreach (var s in active)
+
+                foreach (var id in activeIds)
                 {
+                    var shipment = await repo.GetByIdAsync(id, stoppingToken);
+                    if (shipment is null) continue;
+
                     var lat = wp.Lat + (Random.Shared.NextDouble() - 0.5) * 0.05;
                     var lng = wp.Lng + (Random.Shared.NextDouble() - 0.5) * 0.05;
-                    await broadcaster.BroadcastAsync(s.Id, lat, lng, 70 + Random.Shared.Next(20), s.Status.ToString(), DateTime.UtcNow, stoppingToken);
+                    var speed = 70 + Random.Shared.Next(20);
+
+                    var result = shipment.RecordLocation(lat, lng, speed);
+                    if (result.IsFailure) continue;
+
+                    await uow.SaveChangesAsync(stoppingToken);
+                    await broadcaster.BroadcastAsync(shipment.Id, lat, lng, speed, shipment.Status.ToString(), DateTime.UtcNow, stoppingToken);
                 }
+
                 step++;
             }
             catch (Exception ex)

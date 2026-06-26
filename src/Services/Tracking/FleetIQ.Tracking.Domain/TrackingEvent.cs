@@ -19,5 +19,5 @@ public sealed class TrackingEvent : Entity<Guid>
         Type = type; Note = note; Latitude = lat; Longitude = lng; OccurredOnUtc = DateTime.UtcNow;
     }
 
-    private TrackingEvent() : base(Guid.NewGuid()) { }
+    private TrackingEvent() { } // EF: materialized row, IsTransient = false
 }

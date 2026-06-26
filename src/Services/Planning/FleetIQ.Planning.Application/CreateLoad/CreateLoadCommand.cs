@@ -6,16 +6,14 @@ using FleetIQ.Planning.Domain;
 
 namespace FleetIQ.Planning.Application.CreateLoad;
 
-public sealed record CreateLoadCommand(Guid OrderId, string OriginCity, string DestinationCity, decimal WeightKg) : ICommand<Result<Guid>>;
+public sealed record CreateLoadCommand(string OriginCity, string DestinationCity) : ICommand<Result<Guid>>;
 
 public sealed class CreateLoadCommandValidator : AbstractValidator<CreateLoadCommand>
 {
     public CreateLoadCommandValidator()
     {
-        RuleFor(x => x.OrderId).NotEmpty();
-        RuleFor(x => x.OriginCity).NotEmpty();
-        RuleFor(x => x.DestinationCity).NotEmpty();
-        RuleFor(x => x.WeightKg).GreaterThanOrEqualTo(0);
+        RuleFor(x => x.OriginCity).NotEmpty().MaximumLength(400);
+        RuleFor(x => x.DestinationCity).NotEmpty().MaximumLength(400);
     }
 }
 
@@ -24,9 +22,11 @@ public sealed class CreateLoadCommandHandler(ILoadRepository repository, IUnitOf
 {
     public async Task<Result<Guid>> Handle(CreateLoadCommand command, CancellationToken ct)
     {
-        var entity = Load.Create(command.OrderId, command.OriginCity, command.DestinationCity, command.WeightKg);
-        await repository.AddAsync(entity, ct);
+        var result = Load.Create(command.OriginCity, command.DestinationCity);
+        if (result.IsFailure) return Result.Failure<Guid>(result.Error);
+
+        await repository.AddAsync(result.Value, ct);
         await unitOfWork.SaveChangesAsync(ct);
-        return Result.Success(entity.Id);
+        return Result.Success(result.Value.Id);
     }
 }

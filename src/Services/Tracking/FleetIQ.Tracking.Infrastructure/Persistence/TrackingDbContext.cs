@@ -20,6 +20,7 @@ public sealed class TrackingDbContext(DbContextOptions<TrackingDbContext> option
         var shipment = modelBuilder.Entity<Shipment>();
         shipment.ToTable("shipments");
         shipment.HasKey(s => s.Id);
+        shipment.Ignore(s => s.IsTransient);
         shipment.Property(s => s.Status).HasConversion<int>();
         shipment.HasIndex(s => s.CarrierId);
         shipment.HasIndex(s => s.Status);
@@ -30,6 +31,7 @@ public sealed class TrackingDbContext(DbContextOptions<TrackingDbContext> option
         var ev = modelBuilder.Entity<TrackingEvent>();
         ev.ToTable("tracking_events");
         ev.HasKey(e => e.Id);
+        ev.Ignore(e => e.IsTransient);
         ev.Property(e => e.Type).HasConversion<int>();
         ev.Property(e => e.Note).HasMaxLength(500);
 
@@ -45,6 +47,14 @@ public sealed class TrackingDbContext(DbContextOptions<TrackingDbContext> option
 
     public override async Task<int> SaveChangesAsync(CancellationToken ct = default)
     {
+        // Guarantee that entities constructed in-memory as brand-new (IsTransient) are INSERTed.
+        // When a new child entity (with a client-generated Guid key) is added to an already-tracked
+        // aggregate, EF can mis-classify it as Modified/Unchanged and emit an UPDATE that affects
+        // 0 rows -> DbUpdateConcurrencyException. Forcing Added here removes that whole class of bug.
+        foreach (var entry in ChangeTracker.Entries<Entity<Guid>>())
+            if (entry.Entity.IsTransient && entry.State is EntityState.Modified or EntityState.Unchanged)
+                entry.State = EntityState.Added;
+
         var messages = ChangeTracker.Entries<AggregateRoot<Guid>>()
             .Select(e => e.Entity)
             .SelectMany(a => { var ev = a.DomainEvents; a.ClearDomainEvents(); return ev; })

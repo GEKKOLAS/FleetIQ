@@ -17,5 +17,5 @@ public sealed class InvoiceLine : Entity<Guid>
         UnitPrice = unitPrice;
     }
 
-    private InvoiceLine() : base(Guid.NewGuid()) { Description = string.Empty; } // EF
+    private InvoiceLine() { Description = string.Empty; } // EF: materialized row, IsTransient = false
 }

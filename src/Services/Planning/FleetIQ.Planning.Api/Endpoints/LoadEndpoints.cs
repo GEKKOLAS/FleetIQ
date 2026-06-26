@@ -1,8 +1,13 @@
 using FleetIQ.BuildingBlocks.Application;
 using FleetIQ.BuildingBlocks.Domain;
-using FleetIQ.Planning.Application.Abstractions;
+using FleetIQ.Planning.Application.AddLoadOrder;
+using FleetIQ.Planning.Application.AssignCarrier;
+using FleetIQ.Planning.Application.CancelLoad;
+using FleetIQ.Planning.Application.ConfirmLoad;
 using FleetIQ.Planning.Application.CreateLoad;
 using FleetIQ.Planning.Application.GetLoad;
+using FleetIQ.Planning.Application.ListLoads;
+using FleetIQ.Planning.Application.PlanLoad;
 using FluentValidation;
 
 namespace FleetIQ.Planning.Api.Endpoints;
@@ -11,47 +16,75 @@ public static class LoadEndpoints
 {
     public static void MapLoadEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/loads").WithTags("Load").RequireAuthorization();
+        var group = app.MapGroup("/loads").WithTags("Loads").RequireAuthorization();
 
-        group.MapPost("/", async (
-            CreateLoadCommand command,
-            IValidator<CreateLoadCommand> validator,
-            ICommandHandler<CreateLoadCommand, Result<Guid>> handler,
-            CancellationToken ct) =>
+        group.MapPost("/", async (CreateLoadCommand command, IValidator<CreateLoadCommand> validator,
+            ICommandHandler<CreateLoadCommand, Result<Guid>> handler, CancellationToken ct) =>
         {
-            var validation = await validator.ValidateAsync(command, ct);
-            if (!validation.IsValid) return Results.ValidationProblem(validation.ToDictionary());
-
-            var result = await handler.Handle(command, ct);
-            return result.IsSuccess
-                ? Results.Created($"/loads/{result.Value}", new { id = result.Value })
-                : Results.BadRequest(new { result.Error.Code, result.Error.Description });
+            var v = await validator.ValidateAsync(command, ct);
+            if (!v.IsValid) return Results.ValidationProblem(v.ToDictionary());
+            var r = await handler.Handle(command, ct);
+            return r.IsSuccess ? Results.Created($"/loads/{r.Value}", new { id = r.Value }) : ToProblem(r.Error);
         });
 
-        group.MapGet("/{id:guid}", async (
-            Guid id,
-            IQueryHandler<GetLoadQuery, LoadResponse?> handler,
-            CancellationToken ct) =>
+        group.MapGet("/{id:guid}", async (Guid id, IQueryHandler<GetLoadQuery, LoadDetailResponse?> handler, CancellationToken ct) =>
         {
-            var response = await handler.Handle(new GetLoadQuery(id), ct);
-            return response is null ? Results.NotFound() : Results.Ok(response);
+            var r = await handler.Handle(new GetLoadQuery(id), ct);
+            return r is null ? Results.NotFound() : Results.Ok(r);
         });
 
-        // State transition: Optimize -> Optimized
-        group.MapPost("/{id:guid}/optimize", async (
-            Guid id,
-            ILoadRepository repository,
-            IUnitOfWork unitOfWork,
-            CancellationToken ct) =>
+        group.MapGet("/", async (string? status, int? page, int? pageSize,
+            IQueryHandler<ListLoadsQuery, PagedResult<LoadSummaryResponse>> handler, CancellationToken ct) =>
+            Results.Ok(await handler.Handle(new ListLoadsQuery(status, page ?? 1, pageSize ?? 50), ct)));
+
+        group.MapPost("/{id:guid}/orders", async (Guid id, AddOrderBody body, IValidator<AddLoadOrderCommand> validator,
+            ICommandHandler<AddLoadOrderCommand, Result> handler, CancellationToken ct) =>
         {
-            var entity = await repository.GetByIdAsync(id, ct);
-            if (entity is null) return Results.NotFound();
+            var command = new AddLoadOrderCommand(id, body.OrderId, body.Description, body.WeightKg);
+            var v = await validator.ValidateAsync(command, ct);
+            if (!v.IsValid) return Results.ValidationProblem(v.ToDictionary());
+            var r = await handler.Handle(command, ct);
+            return r.IsSuccess ? Results.NoContent() : ToProblem(r.Error);
+        });
 
-            var result = entity.Optimize();
-            if (result.IsFailure) return Results.BadRequest(new { result.Error.Code, result.Error.Description });
+        group.MapPost("/{id:guid}/assign-carrier", async (Guid id, AssignCarrierBody body, IValidator<AssignCarrierCommand> validator,
+            ICommandHandler<AssignCarrierCommand, Result> handler, CancellationToken ct) =>
+        {
+            var command = new AssignCarrierCommand(id, body.CarrierId);
+            var v = await validator.ValidateAsync(command, ct);
+            if (!v.IsValid) return Results.ValidationProblem(v.ToDictionary());
+            var r = await handler.Handle(command, ct);
+            return r.IsSuccess ? Results.NoContent() : ToProblem(r.Error);
+        });
 
-            await unitOfWork.SaveChangesAsync(ct);
-            return Results.NoContent();
+        group.MapPost("/{id:guid}/plan", async (Guid id, ICommandHandler<PlanLoadCommand, Result> handler, CancellationToken ct) =>
+        {
+            var r = await handler.Handle(new PlanLoadCommand(id), ct);
+            return r.IsSuccess ? Results.NoContent() : ToProblem(r.Error);
+        });
+
+        group.MapPost("/{id:guid}/confirm", async (Guid id, ICommandHandler<ConfirmLoadCommand, Result> handler, CancellationToken ct) =>
+        {
+            var r = await handler.Handle(new ConfirmLoadCommand(id), ct);
+            return r.IsSuccess ? Results.NoContent() : ToProblem(r.Error);
+        });
+
+        group.MapPost("/{id:guid}/cancel", async (Guid id, ICommandHandler<CancelLoadCommand, Result> handler, CancellationToken ct) =>
+        {
+            var r = await handler.Handle(new CancelLoadCommand(id), ct);
+            return r.IsSuccess ? Results.NoContent() : ToProblem(r.Error);
         });
     }
+
+    private static IResult ToProblem(Error error)
+    {
+        var status = error.Code.EndsWith("NotFound") ? StatusCodes.Status404NotFound
+            : error.Code is "Load.NotDraft" or "Load.NotPlanned" or "Load.AlreadyFinished"
+              or "Load.NoOrders" or "Load.NoCarrier" or "Load.NoRoute"
+                ? StatusCodes.Status409Conflict : StatusCodes.Status400BadRequest;
+        return Results.Problem(detail: error.Description, title: error.Code, statusCode: status);
+    }
+
+    public sealed record AddOrderBody(Guid OrderId, string Description, decimal WeightKg);
+    public sealed record AssignCarrierBody(Guid CarrierId);
 }

@@ -15,5 +15,5 @@ public sealed class OrderItem : Entity<Guid>
         Description = description; Quantity = quantity; WeightKg = weightKg;
     }
 
-    private OrderItem() : base(Guid.NewGuid()) { Description = string.Empty; }
+    private OrderItem() { Description = string.Empty; } // EF: materialized row, IsTransient = false
 }

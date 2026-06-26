@@ -20,6 +20,7 @@ public sealed class BillingDbContext(DbContextOptions<BillingDbContext> options)
         var invoice = modelBuilder.Entity<Invoice>();
         invoice.ToTable("invoices");
         invoice.HasKey(x => x.Id);
+        invoice.Ignore(x => x.IsTransient);
         invoice.Property(x => x.Currency).HasMaxLength(3);
         invoice.Property(x => x.Status).HasConversion<int>();
         invoice.HasIndex(x => x.CustomerId);
@@ -36,6 +37,7 @@ public sealed class BillingDbContext(DbContextOptions<BillingDbContext> options)
             line.ToTable("invoice_lines");
             line.WithOwner().HasForeignKey("InvoiceId");
             line.HasKey("Id");
+            line.Ignore(p => p.IsTransient);
             line.Property(p => p.Description).HasMaxLength(250);
             line.Property(p => p.UnitPrice).HasPrecision(18, 2);
             line.Ignore(p => p.LineTotal); // computed, not stored
@@ -53,6 +55,14 @@ public sealed class BillingDbContext(DbContextOptions<BillingDbContext> options)
 
     public override async Task<int> SaveChangesAsync(CancellationToken ct = default)
     {
+        // Same guard as Tracking: a brand-new child (InvoiceLine) added to an already-tracked
+        // Invoice can be mis-classified by EF as Modified -> UPDATE that affects 0 rows ->
+        // DbUpdateConcurrencyException (the AddLine 500). Forcing transient entities to Added
+        // makes them INSERT correctly. Loaded rows have IsTransient = false, so they're untouched.
+        foreach (var entry in ChangeTracker.Entries<Entity<Guid>>())
+            if (entry.Entity.IsTransient && entry.State is EntityState.Modified or EntityState.Unchanged)
+                entry.State = EntityState.Added;
+
         var messages = ChangeTracker.Entries<AggregateRoot<Guid>>()
             .Select(entry => entry.Entity)
             .SelectMany(aggregate =>
