@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FleetIQ.Tracking.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(TrackingDbContext))]
-    [Migration("20260614224950_InitialCreate")]
+    [Migration("20260626205034_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -68,15 +68,86 @@ namespace FleetIQ.Tracking.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("CreatedOnUtc")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<double?>("CurrentLatitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("CurrentLongitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("CurrentSpeedKph")
+                        .HasColumnType("double precision");
+
+                    b.Property<DateTime?>("DeliveredOnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DispatchedOnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("LastPositionAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<Guid>("LoadId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("ReceivedBy")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CarrierId");
+
+                    b.HasIndex("Status");
+
                     b.ToTable("shipments", "tracking");
+                });
+
+            modelBuilder.Entity("FleetIQ.Tracking.Domain.TrackingEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime>("OccurredOnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ShipmentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ShipmentId");
+
+                    b.ToTable("tracking_events", "tracking");
+                });
+
+            modelBuilder.Entity("FleetIQ.Tracking.Domain.TrackingEvent", b =>
+                {
+                    b.HasOne("FleetIQ.Tracking.Domain.Shipment", null)
+                        .WithMany("Events")
+                        .HasForeignKey("ShipmentId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("FleetIQ.Tracking.Domain.Shipment", b =>
+                {
+                    b.Navigation("Events");
                 });
 #pragma warning restore 612, 618
         }

@@ -9,14 +9,19 @@ builder.Services.AddReverseProxy().LoadFromConfig(builder.Configuration.GetSecti
 builder.Services.AddFleetIqJwtAuth(builder.Configuration);
 builder.Services.AddHealthChecks();
 
+// Allow the Angular dev app (http://localhost:4200) to call the gateway, including SignalR (credentials).
+const string FrontendCors = "frontend";
+builder.Services.AddCors(o => o.AddPolicy(FrontendCors, p => p.WithOrigins("http://localhost:4200").AllowAnyHeader().AllowAnyMethod().AllowCredentials()));
+
 var app = builder.Build();
 
 app.UseSerilogRequestLogging();
-app.MapHealthChecks("/health");          // anonymous
+app.UseCors(FrontendCors);
+app.MapHealthChecks("/health");
 
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapReverseProxy();                    // every proxied route requires an authenticated caller
+app.MapReverseProxy();
 
 app.Run();

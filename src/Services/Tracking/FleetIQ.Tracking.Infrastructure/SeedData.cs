@@ -4,18 +4,22 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FleetIQ.Tracking.Infrastructure;
 
-/// <summary>Inserts sample rows on first run (Development only).</summary>
 public static class SeedData
 {
     public static async Task SeedAsync(TrackingDbContext db)
     {
         if (await db.Shipments.AnyAsync()) return;
 
-        db.Shipments.AddRange(
-            Shipment.Create(Guid.NewGuid(), Guid.NewGuid()),
-            Shipment.Create(Guid.NewGuid(), Guid.NewGuid()),
-            Shipment.Create(Guid.NewGuid(), Guid.NewGuid()));
-
+        for (var i = 0; i < 2; i++)
+        {
+            var s = Shipment.Create(Guid.NewGuid(), Guid.NewGuid());
+            if (s.IsSuccess)
+            {
+                s.Value.Dispatch();
+                s.Value.RecordLocation(38.7223, -9.1393, 0); // Lisbon
+                db.Shipments.Add(s.Value);
+            }
+        }
         await db.SaveChangesAsync();
     }
 }

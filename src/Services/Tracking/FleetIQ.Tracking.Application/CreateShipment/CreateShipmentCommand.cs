@@ -22,9 +22,10 @@ public sealed class CreateShipmentCommandHandler(IShipmentRepository repository,
 {
     public async Task<Result<Guid>> Handle(CreateShipmentCommand command, CancellationToken ct)
     {
-        var entity = Shipment.Create(command.LoadId, command.CarrierId);
-        await repository.AddAsync(entity, ct);
+        var result = Shipment.Create(command.LoadId, command.CarrierId);
+        if (result.IsFailure) return Result.Failure<Guid>(result.Error);
+        await repository.AddAsync(result.Value, ct);
         await unitOfWork.SaveChangesAsync(ct);
-        return Result.Success(entity.Id);
+        return Result.Success(result.Value.Id);
     }
 }

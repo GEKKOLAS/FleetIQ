@@ -44,6 +44,7 @@ public static class Config
             AllowedGrantTypes = GrantTypes.Code,
             RequireClientSecret = false,
             RequirePkce = true,
+            RequireConsent = false,                 // no consent screen for our own SPA
             AllowedScopes = { "openid", "profile", "fleetiq.api" },
             RedirectUris = { "http://localhost:4200/callback" },
             PostLogoutRedirectUris = { "http://localhost:4200" },

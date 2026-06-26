@@ -17,18 +17,28 @@ public sealed class TrackingDbContext(DbContextOptions<TrackingDbContext> option
     {
         modelBuilder.HasDefaultSchema("tracking");
 
-        var e = modelBuilder.Entity<Shipment>();
-        e.ToTable("shipments");
-        e.HasKey(x => x.Id);
-        e.Property(x => x.Status).HasConversion<int>();
+        var shipment = modelBuilder.Entity<Shipment>();
+        shipment.ToTable("shipments");
+        shipment.HasKey(s => s.Id);
+        shipment.Property(s => s.Status).HasConversion<int>();
+        shipment.HasIndex(s => s.CarrierId);
+        shipment.HasIndex(s => s.Status);
+        shipment.Property(s => s.ReceivedBy).HasMaxLength(200);
+        shipment.HasMany(s => s.Events).WithOne().HasForeignKey("ShipmentId").OnDelete(DeleteBehavior.Cascade);
+        shipment.Navigation(s => s.Events).UsePropertyAccessMode(PropertyAccessMode.Field);
 
+        var ev = modelBuilder.Entity<TrackingEvent>();
+        ev.ToTable("tracking_events");
+        ev.HasKey(e => e.Id);
+        ev.Property(e => e.Type).HasConversion<int>();
+        ev.Property(e => e.Note).HasMaxLength(500);
 
-        var o = modelBuilder.Entity<OutboxMessage>();
-        o.ToTable("outbox_messages");
-        o.HasKey(x => x.Id);
-        o.Property(x => x.Type).IsRequired();
-        o.Property(x => x.Content).IsRequired();
-        o.HasIndex(x => x.ProcessedOnUtc);
+        var outbox = modelBuilder.Entity<OutboxMessage>();
+        outbox.ToTable("outbox_messages");
+        outbox.HasKey(m => m.Id);
+        outbox.Property(m => m.Type).IsRequired();
+        outbox.Property(m => m.Content).IsRequired();
+        outbox.HasIndex(m => m.ProcessedOnUtc);
 
         base.OnModelCreating(modelBuilder);
     }
@@ -36,20 +46,10 @@ public sealed class TrackingDbContext(DbContextOptions<TrackingDbContext> option
     public override async Task<int> SaveChangesAsync(CancellationToken ct = default)
     {
         var messages = ChangeTracker.Entries<AggregateRoot<Guid>>()
-            .Select(entry => entry.Entity)
-            .SelectMany(aggregate =>
-            {
-                var events = aggregate.DomainEvents;
-                aggregate.ClearDomainEvents();
-                return events;
-            })
-            .Select(domainEvent => new OutboxMessage
-            {
-                Type = domainEvent.GetType().AssemblyQualifiedName!,
-                Content = JsonSerializer.Serialize(domainEvent, domainEvent.GetType())
-            })
+            .Select(e => e.Entity)
+            .SelectMany(a => { var ev = a.DomainEvents; a.ClearDomainEvents(); return ev; })
+            .Select(de => new OutboxMessage { Type = de.GetType().AssemblyQualifiedName!, Content = JsonSerializer.Serialize(de, de.GetType()) })
             .ToList();
-
         if (messages.Count > 0) OutboxMessages.AddRange(messages);
         return await base.SaveChangesAsync(ct);
     }
