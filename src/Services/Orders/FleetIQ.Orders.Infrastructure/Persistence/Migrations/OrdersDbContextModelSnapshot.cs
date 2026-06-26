@@ -59,6 +59,12 @@ namespace FleetIQ.Orders.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime?>("CancelledOnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("ConfirmedOnUtc")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTime>("CreatedOnUtc")
                         .HasColumnType("timestamp with time zone");
 
@@ -75,35 +81,43 @@ namespace FleetIQ.Orders.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("Status");
+
                     b.ToTable("orders", "orders");
+                });
+
+            modelBuilder.Entity("FleetIQ.Orders.Domain.Orders.OrderItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("character varying(250)");
+
+                    b.Property<Guid?>("OrderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("WeightKg")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("numeric(18,3)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.ToTable("order_items", "orders");
                 });
 
             modelBuilder.Entity("FleetIQ.Orders.Domain.Orders.Order", b =>
                 {
-                    b.OwnsOne("FleetIQ.Orders.Domain.Orders.Money", "Quote", b1 =>
-                        {
-                            b1.Property<Guid>("OrderId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<decimal>("Amount")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
-                                .HasColumnName("quote_amount");
-
-                            b1.Property<string>("Currency")
-                                .IsRequired()
-                                .HasMaxLength(3)
-                                .HasColumnType("character varying(3)")
-                                .HasColumnName("quote_currency");
-
-                            b1.HasKey("OrderId");
-
-                            b1.ToTable("orders", "orders");
-
-                            b1.WithOwner()
-                                .HasForeignKey("OrderId");
-                        });
-
                     b.OwnsOne("FleetIQ.Orders.Domain.Orders.Address", "Delivery", b1 =>
                         {
                             b1.Property<Guid>("OrderId")
@@ -186,45 +200,24 @@ namespace FleetIQ.Orders.Infrastructure.Persistence.Migrations
                                 .HasForeignKey("OrderId");
                         });
 
-                    b.OwnsMany("FleetIQ.Orders.Domain.Orders.OrderItem", "Items", b1 =>
-                        {
-                            b1.Property<Guid>("Id")
-                                .ValueGeneratedOnAdd()
-                                .HasColumnType("uuid");
-
-                            b1.Property<string>("Description")
-                                .IsRequired()
-                                .HasMaxLength(250)
-                                .HasColumnType("character varying(250)");
-
-                            b1.Property<Guid>("OrderId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<int>("Quantity")
-                                .HasColumnType("integer");
-
-                            b1.Property<decimal>("WeightKg")
-                                .HasColumnType("numeric");
-
-                            b1.HasKey("Id");
-
-                            b1.HasIndex("OrderId");
-
-                            b1.ToTable("order_items", "orders");
-
-                            b1.WithOwner()
-                                .HasForeignKey("OrderId");
-                        });
-
                     b.Navigation("Delivery")
                         .IsRequired();
 
-                    b.Navigation("Items");
-
                     b.Navigation("Pickup")
                         .IsRequired();
+                });
 
-                    b.Navigation("Quote");
+            modelBuilder.Entity("FleetIQ.Orders.Domain.Orders.OrderItem", b =>
+                {
+                    b.HasOne("FleetIQ.Orders.Domain.Orders.Order", null)
+                        .WithMany("Items")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("FleetIQ.Orders.Domain.Orders.Order", b =>
+                {
+                    b.Navigation("Items");
                 });
 #pragma warning restore 612, 618
         }

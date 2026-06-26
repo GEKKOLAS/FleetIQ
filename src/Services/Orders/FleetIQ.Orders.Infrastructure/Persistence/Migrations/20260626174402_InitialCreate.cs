@@ -35,9 +35,9 @@ namespace FleetIQ.Orders.Infrastructure.Persistence.Migrations
                     delivery_lat = table.Column<double>(type: "double precision", nullable: true),
                     delivery_lng = table.Column<double>(type: "double precision", nullable: true),
                     Status = table.Column<int>(type: "integer", nullable: false),
-                    quote_amount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: true),
-                    quote_currency = table.Column<string>(type: "character varying(3)", maxLength: 3, nullable: true),
-                    CreatedOnUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedOnUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    ConfirmedOnUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    CancelledOnUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -69,8 +69,8 @@ namespace FleetIQ.Orders.Infrastructure.Persistence.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Description = table.Column<string>(type: "character varying(250)", maxLength: 250, nullable: false),
                     Quantity = table.Column<int>(type: "integer", nullable: false),
-                    WeightKg = table.Column<decimal>(type: "numeric", nullable: false),
-                    OrderId = table.Column<Guid>(type: "uuid", nullable: false)
+                    WeightKg = table.Column<decimal>(type: "numeric(18,3)", precision: 18, scale: 3, nullable: false),
+                    OrderId = table.Column<Guid>(type: "uuid", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -89,6 +89,18 @@ namespace FleetIQ.Orders.Infrastructure.Persistence.Migrations
                 schema: "orders",
                 table: "order_items",
                 column: "OrderId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_orders_CustomerId",
+                schema: "orders",
+                table: "orders",
+                column: "CustomerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_orders_Status",
+                schema: "orders",
+                table: "orders",
+                column: "Status");
 
             migrationBuilder.CreateIndex(
                 name: "IX_outbox_messages_ProcessedOnUtc",

@@ -20,18 +20,10 @@ public sealed class OrdersDbContext(DbContextOptions<OrdersDbContext> options)
         base.OnModelCreating(modelBuilder);
     }
 
-    /// <summary>Persist aggregate changes and their domain events (to the outbox) atomically.</summary>
     public override async Task<int> SaveChangesAsync(CancellationToken ct = default)
     {
-        ConvertDomainEventsToOutboxMessages();
-        return await base.SaveChangesAsync(ct);
-    }
-
-    private void ConvertDomainEventsToOutboxMessages()
-    {
-        var outbox = ChangeTracker
-            .Entries<AggregateRoot<Guid>>()
-            .Select(e => e.Entity)
+        var messages = ChangeTracker.Entries<AggregateRoot<Guid>>()
+            .Select(entry => entry.Entity)
             .SelectMany(aggregate =>
             {
                 var events = aggregate.DomainEvents;
@@ -45,6 +37,7 @@ public sealed class OrdersDbContext(DbContextOptions<OrdersDbContext> options)
             })
             .ToList();
 
-        if (outbox.Count > 0) OutboxMessages.AddRange(outbox);
+        if (messages.Count > 0) OutboxMessages.AddRange(messages);
+        return await base.SaveChangesAsync(ct);
     }
 }

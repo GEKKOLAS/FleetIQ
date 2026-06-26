@@ -12,6 +12,8 @@ public sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.HasKey(o => o.Id);
         builder.Property(o => o.OrderNumber).HasMaxLength(40).IsRequired();
         builder.Property(o => o.Status).HasConversion<int>();
+        builder.HasIndex(o => o.CustomerId);
+        builder.HasIndex(o => o.Status);
 
         builder.OwnsOne(o => o.Pickup, a =>
         {
@@ -33,18 +35,8 @@ public sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
             a.Property(p => p.Longitude).HasColumnName("delivery_lng");
         });
 
-        builder.OwnsOne(o => o.Quote, m =>
-        {
-            m.Property(p => p.Amount).HasColumnName("quote_amount").HasPrecision(18, 2);
-            m.Property(p => p.Currency).HasColumnName("quote_currency").HasMaxLength(3);
-        });
-
-        builder.OwnsMany(o => o.Items, i =>
-        {
-            i.ToTable("order_items");
-            i.WithOwner().HasForeignKey("OrderId");
-            i.HasKey(x => x.Id);
-            i.Property(x => x.Description).HasMaxLength(250);
-        });
+        // Regular entity child (NOT owned): clean insert/remove on update.
+        builder.HasMany(o => o.Items).WithOne().HasForeignKey("OrderId").OnDelete(DeleteBehavior.Cascade);
+        builder.Navigation(o => o.Items).UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }

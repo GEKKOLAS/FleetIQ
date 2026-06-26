@@ -2,9 +2,8 @@ using FleetIQ.BuildingBlocks.Domain;
 
 namespace FleetIQ.Orders.Domain.Orders;
 
-/// <summary>Public input record used to create order lines from the outside (Application layer).</summary>
-public sealed record OrderLine(string Description, int Quantity, decimal WeightKg);
-
+/// <summary>Child of the Order aggregate. Modeled as a REGULAR entity (own table + FK), so EF
+/// inserts/removes it cleanly when the order is updated (unlike an owned collection).</summary>
 public sealed class OrderItem : Entity<Guid>
 {
     public string Description { get; private set; }
@@ -13,10 +12,8 @@ public sealed class OrderItem : Entity<Guid>
 
     internal OrderItem(Guid id, string description, int quantity, decimal weightKg) : base(id)
     {
-        Description = description;
-        Quantity = quantity;
-        WeightKg = weightKg;
+        Description = description; Quantity = quantity; WeightKg = weightKg;
     }
 
-    private OrderItem() : base(Guid.NewGuid()) { Description = string.Empty; } // EF
+    private OrderItem() : base(Guid.NewGuid()) { Description = string.Empty; }
 }
