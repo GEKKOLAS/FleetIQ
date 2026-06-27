@@ -77,6 +77,17 @@ namespace FleetIQ.Tracking.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("DeliveredOnUtc")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("DestinationCity")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<double>("DestinationLatitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<double>("DestinationLongitude")
+                        .HasColumnType("double precision");
+
                     b.Property<DateTime?>("DispatchedOnUtc")
                         .HasColumnType("timestamp with time zone");
 
@@ -85,6 +96,17 @@ namespace FleetIQ.Tracking.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid>("LoadId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("OriginCity")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<double>("OriginLatitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<double>("OriginLongitude")
+                        .HasColumnType("double precision");
 
                     b.Property<string>("ReceivedBy")
                         .HasMaxLength(200)

@@ -24,6 +24,8 @@ public sealed class TrackingDbContext(DbContextOptions<TrackingDbContext> option
         shipment.Property(s => s.Status).HasConversion<int>();
         shipment.HasIndex(s => s.CarrierId);
         shipment.HasIndex(s => s.Status);
+        shipment.Property(s => s.OriginCity).HasMaxLength(200);
+        shipment.Property(s => s.DestinationCity).HasMaxLength(200);
         shipment.Property(s => s.ReceivedBy).HasMaxLength(200);
         shipment.HasMany(s => s.Events).WithOne().HasForeignKey("ShipmentId").OnDelete(DeleteBehavior.Cascade);
         shipment.Navigation(s => s.Events).UsePropertyAccessMode(PropertyAccessMode.Field);

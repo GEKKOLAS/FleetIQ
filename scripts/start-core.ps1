@@ -7,7 +7,7 @@ Set-Location (Join-Path $PSScriptRoot '..')
 dotnet dev-certs https --trust 2>$null | Out-Null
 
 Write-Host "Building the solution once..." -ForegroundColor Yellow
-dotnet build FleetIQ.sln -c Debug --nologo
+dotnet build FleetIQ.slnx -c Debug --nologo
 if ($LASTEXITCODE -ne 0) { Write-Host "Build failed. Fix errors and retry." -ForegroundColor Red; exit 1 }
 
 $core = @(

@@ -9,7 +9,9 @@ public sealed record ListShipmentsQuery(Guid? CarrierId, string? Status, int Pag
 
 public sealed record ShipmentSummaryResponse(
     Guid Id, Guid LoadId, Guid CarrierId, string Status,
-    double? CurrentLatitude, double? CurrentLongitude, DateTime? LastPositionAtUtc, DateTime CreatedOnUtc);
+    double? CurrentLatitude, double? CurrentLongitude, DateTime? LastPositionAtUtc, DateTime CreatedOnUtc,
+    string OriginCity, string DestinationCity,
+    double OriginLatitude, double OriginLongitude, double DestinationLatitude, double DestinationLongitude);
 
 public sealed class ListShipmentsQueryHandler(IShipmentRepository repository)
     : IQueryHandler<ListShipmentsQuery, PagedResult<ShipmentSummaryResponse>>
@@ -23,7 +25,9 @@ public sealed class ListShipmentsQueryHandler(IShipmentRepository repository)
         var paged = await repository.ListAsync(query.CarrierId, status, query.Page, query.PageSize, ct);
         var items = paged.Items
             .Select(s => new ShipmentSummaryResponse(s.Id, s.LoadId, s.CarrierId, s.Status.ToString(),
-                s.CurrentLatitude, s.CurrentLongitude, s.LastPositionAtUtc, s.CreatedOnUtc))
+                s.CurrentLatitude, s.CurrentLongitude, s.LastPositionAtUtc, s.CreatedOnUtc,
+                s.OriginCity, s.DestinationCity,
+                s.OriginLatitude, s.OriginLongitude, s.DestinationLatitude, s.DestinationLongitude))
             .ToList();
         return new PagedResult<ShipmentSummaryResponse>(items, paged.Page, paged.PageSize, paged.TotalCount);
     }

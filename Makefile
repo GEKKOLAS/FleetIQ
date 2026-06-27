@@ -10,10 +10,10 @@ init:          ## create the solution file and add all projects
 	bash scripts/init-solution.sh
 
 build:
-	dotnet build FleetIQ.sln
+	dotnet build FleetIQ.slnx
 
 run-orders:    ## run the Orders API
 	dotnet run --project src/Services/Orders/FleetIQ.Orders.Api
 
 test:
-	dotnet test FleetIQ.sln
+	dotnet test FleetIQ.slnx

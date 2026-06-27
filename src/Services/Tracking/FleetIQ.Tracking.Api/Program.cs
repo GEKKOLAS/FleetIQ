@@ -25,6 +25,7 @@ RegisterHandlers(builder.Services, applicationAssembly);
 
 builder.Services.AddSignalR();
 builder.Services.AddScoped<IShipmentLocationBroadcaster, ShipmentLocationBroadcaster>();
+builder.Services.AddHttpClient("osrm");                   // real road-routing for the simulator
 builder.Services.AddHostedService<LocationSimulator>();   // dev: moves shipments on the map
 
 builder.Services.AddProblemDetails();

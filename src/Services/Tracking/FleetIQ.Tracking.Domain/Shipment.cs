@@ -13,6 +13,14 @@ public sealed class Shipment : AggregateRoot<Guid>
     public Guid CarrierId { get; private set; }
     public ShipmentStatus Status { get; private set; }
 
+    // Real origin/destination of the shipment, used to plot an actual road route on the live map.
+    public string OriginCity { get; private set; } = string.Empty;
+    public string DestinationCity { get; private set; } = string.Empty;
+    public double OriginLatitude { get; private set; }
+    public double OriginLongitude { get; private set; }
+    public double DestinationLatitude { get; private set; }
+    public double DestinationLongitude { get; private set; }
+
     public double? CurrentLatitude { get; private set; }
     public double? CurrentLongitude { get; private set; }
     public double? CurrentSpeedKph { get; private set; }
@@ -27,15 +35,24 @@ public sealed class Shipment : AggregateRoot<Guid>
 
     private Shipment() { }
 
-    private Shipment(Guid id, Guid loadId, Guid carrierId) : base(id)
+    private Shipment(Guid id, Guid loadId, Guid carrierId,
+        string originCity, string destinationCity,
+        double originLat, double originLng, double destLat, double destLng) : base(id)
     {
         LoadId = loadId; CarrierId = carrierId; Status = ShipmentStatus.Created; CreatedOnUtc = DateTime.UtcNow;
+        OriginCity = originCity; DestinationCity = destinationCity;
+        OriginLatitude = originLat; OriginLongitude = originLng;
+        DestinationLatitude = destLat; DestinationLongitude = destLng;
     }
 
-    public static Result<Shipment> Create(Guid loadId, Guid carrierId)
+    public static Result<Shipment> Create(Guid loadId, Guid carrierId,
+        string originCity = "", string destinationCity = "",
+        double originLat = 0, double originLng = 0, double destinationLat = 0, double destinationLng = 0)
     {
         if (loadId == Guid.Empty || carrierId == Guid.Empty) return Result.Failure<Shipment>(ShipmentErrors.NotFound);
-        var shipment = new Shipment(Guid.NewGuid(), loadId, carrierId);
+        var shipment = new Shipment(Guid.NewGuid(), loadId, carrierId,
+            originCity ?? string.Empty, destinationCity ?? string.Empty,
+            originLat, originLng, destinationLat, destinationLng);
         shipment._events.Add(new TrackingEvent(Guid.NewGuid(), TrackingEventType.Created, "Shipment created", null, null));
         shipment.Raise(new ShipmentCreatedDomainEvent(shipment.Id, loadId, carrierId));
         return Result.Success(shipment);

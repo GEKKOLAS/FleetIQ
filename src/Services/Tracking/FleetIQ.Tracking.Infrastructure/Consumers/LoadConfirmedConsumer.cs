@@ -1,4 +1,5 @@
 using FleetIQ.Contracts;
+using FleetIQ.Tracking.Application.Routing;
 using FleetIQ.Tracking.Domain;
 using FleetIQ.Tracking.Infrastructure.Persistence;
 using MassTransit;
@@ -23,18 +24,34 @@ public sealed class LoadConfirmedConsumer(TrackingDbContext db, ILogger<LoadConf
             return;
         }
 
-        var result = Shipment.Create(message.LoadId, message.CarrierId);
+        // Resolve the load's cities to coordinates so the shipment plots a real road route.
+        var hasO = CityGeocoder.TryGet(message.OriginCity, out var oc);
+        var hasD = CityGeocoder.TryGet(message.DestinationCity, out var dc);
+        if (!hasO || !hasD)
+        {
+            var t = CityGeocoder.RandomTrip();   // unknown city names -> fall back to a random real trip
+            if (!hasO) { oc = (t.OLat, t.OLng); }
+            if (!hasD) { dc = (t.DLat, t.DLng); }
+        }
+
+        var result = Shipment.Create(message.LoadId, message.CarrierId,
+            message.OriginCity, message.DestinationCity, oc.Lat, oc.Lng, dc.Lat, dc.Lng);
         if (result.IsFailure)
         {
             logger.LogWarning("[Tracking] Could not create shipment for load {LoadId}: {Error}", message.LoadId, result.Error.Code);
             return;
         }
 
-        db.Shipments.Add(result.Value);
+        var shipment = result.Value;
+        // A confirmed load already has a carrier and a finalized route, so dispatch it right away:
+        // the shipment goes active and the simulator starts moving it on the live map automatically.
+        shipment.Dispatch();
+
+        db.Shipments.Add(shipment);
         await db.SaveChangesAsync(context.CancellationToken);
 
         logger.LogInformation(
-            "[Tracking] Load {LoadId} confirmed ({Origin} -> {Destination}) -> shipment {ShipmentId} created",
-            message.LoadId, message.OriginCity, message.DestinationCity, result.Value.Id);
+            "[Tracking] Load {LoadId} confirmed ({Origin} -> {Destination}) -> shipment {ShipmentId} created and dispatched",
+            message.LoadId, message.OriginCity, message.DestinationCity, shipment.Id);
     }
 }

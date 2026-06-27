@@ -2,6 +2,7 @@ using FleetIQ.BuildingBlocks.Application;
 using FleetIQ.BuildingBlocks.Domain;
 using FleetIQ.Planning.Application.AddLoadOrder;
 using FleetIQ.Planning.Application.AssignCarrier;
+using FleetIQ.Planning.Application.AttachRoute;
 using FleetIQ.Planning.Application.CancelLoad;
 using FleetIQ.Planning.Application.ConfirmLoad;
 using FleetIQ.Planning.Application.CreateLoad;
@@ -57,6 +58,16 @@ public static class LoadEndpoints
             return r.IsSuccess ? Results.NoContent() : ToProblem(r.Error);
         });
 
+        group.MapPost("/{id:guid}/attach-route", async (Guid id, AttachRouteBody body, IValidator<AttachRouteCommand> validator,
+            ICommandHandler<AttachRouteCommand, Result> handler, CancellationToken ct) =>
+        {
+            var command = new AttachRouteCommand(id, body.RouteId);
+            var v = await validator.ValidateAsync(command, ct);
+            if (!v.IsValid) return Results.ValidationProblem(v.ToDictionary());
+            var r = await handler.Handle(command, ct);
+            return r.IsSuccess ? Results.NoContent() : ToProblem(r.Error);
+        });
+
         group.MapPost("/{id:guid}/plan", async (Guid id, ICommandHandler<PlanLoadCommand, Result> handler, CancellationToken ct) =>
         {
             var r = await handler.Handle(new PlanLoadCommand(id), ct);
@@ -81,10 +92,12 @@ public static class LoadEndpoints
         var status = error.Code.EndsWith("NotFound") ? StatusCodes.Status404NotFound
             : error.Code is "Load.NotDraft" or "Load.NotPlanned" or "Load.AlreadyFinished"
               or "Load.NoOrders" or "Load.NoCarrier" or "Load.NoRoute"
+              or "Route.NotFinalized" or "Route.WrongLoad"
                 ? StatusCodes.Status409Conflict : StatusCodes.Status400BadRequest;
         return Results.Problem(detail: error.Description, title: error.Code, statusCode: status);
     }
 
     public sealed record AddOrderBody(Guid OrderId, string Description, decimal WeightKg);
     public sealed record AssignCarrierBody(Guid CarrierId);
+    public sealed record AttachRouteBody(Guid RouteId);
 }
