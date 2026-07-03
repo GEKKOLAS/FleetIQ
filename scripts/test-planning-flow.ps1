@@ -43,11 +43,18 @@ try {
     Step 2 "Add order to load"
     Post "/loads/$loadId/orders" @{ orderId = [guid]::NewGuid(); description = 'Pallet electronics'; weightKg = 320 } | Out-Null
 
-    # 3. Assign carrier
-    Step 3 "Assign carrier"
-    $carrierId = [guid]::NewGuid()
+    # 3. Set up a real, verified carrier (Carriers service) and assign it.
+    Step 3 "Create + verify a carrier, then assign it"
+    $carrier = Post '/carriers' @{ legalName = 'Demo Freight SL'; registrationNumber = "ES-$(Get-Random)"; country = 'ES' }
+    $carrierId = $carrier.id
+    Post "/carriers/$carrierId/vehicles" @{ plate = 'DEMO-01'; type = 'Truck'; capacityKg = 24000 } | Out-Null
+    Post "/carriers/$carrierId/drivers"  @{ fullName = 'Demo Driver'; licenceNumber = 'ES-D-0001' } | Out-Null
+    Post "/carriers/$carrierId/verify" $null | Out-Null
+    Write-Host "   carrierId = $carrierId (verified)" -ForegroundColor Green
+
+    # Give Planning's read-model a moment to consume CarrierVerified before assigning.
+    Start-Sleep -Seconds 2
     Post "/loads/$loadId/assign-carrier" @{ carrierId = $carrierId } | Out-Null
-    Write-Host "   carrierId = $carrierId" -ForegroundColor Green
 
     # 4. Create route for the load
     Step 4 "Create route"

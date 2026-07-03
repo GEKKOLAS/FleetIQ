@@ -1,4 +1,5 @@
 using FleetIQ.BuildingBlocks.Application;
+using FleetIQ.BuildingBlocks.Infrastructure.Messaging;
 using FleetIQ.BuildingBlocks.Infrastructure.Outbox;
 using FleetIQ.Carriers.Application.Abstractions;
 using FleetIQ.Carriers.Infrastructure.Persistence;
@@ -16,6 +17,7 @@ public static class DependencyInjection
         services.AddDbContext<CarriersDbContext>(o => o.UseNpgsql(config.GetConnectionString("Carriers")));
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<CarriersDbContext>());
         services.AddScoped<ICarrierRepository, CarrierRepository>();
+        services.AddScoped<IIntegrationEventPublisher, MassTransitIntegrationEventPublisher>();
         services.AddHostedService<OutboxProcessor<CarriersDbContext>>();
 
         services.AddMassTransit(x =>

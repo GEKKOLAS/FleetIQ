@@ -200,6 +200,28 @@ namespace FleetIQ.Planning.Infrastructure.Migrations
                     b.ToTable("route_stops", "planning");
                 });
 
+            modelBuilder.Entity("FleetIQ.Planning.Infrastructure.Persistence.ReadModels.CarrierView", b =>
+                {
+                    b.Property<Guid>("CarrierId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsVerified")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("LegalName")
+                        .IsRequired()
+                        .HasMaxLength(400)
+                        .HasColumnType("character varying(400)");
+
+                    b.Property<DateTime>("UpdatedOnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("CarrierId");
+
+                    b.ToTable("carrier_views", "planning");
+                });
+
             modelBuilder.Entity("FleetIQ.Planning.Domain.LoadOrder", b =>
                 {
                     b.HasOne("FleetIQ.Planning.Domain.Load", null)

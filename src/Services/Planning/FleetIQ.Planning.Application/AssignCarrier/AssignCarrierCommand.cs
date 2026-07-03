@@ -17,13 +17,18 @@ public sealed class AssignCarrierCommandValidator : AbstractValidator<AssignCarr
     }
 }
 
-public sealed class AssignCarrierCommandHandler(ILoadRepository repository, IUnitOfWork unitOfWork)
+public sealed class AssignCarrierCommandHandler(
+    ILoadRepository repository, IUnitOfWork unitOfWork, ICarrierDirectory carriers)
     : ICommandHandler<AssignCarrierCommand, Result>
 {
     public async Task<Result> Handle(AssignCarrierCommand command, CancellationToken ct)
     {
         var load = await repository.GetByIdAsync(command.LoadId, ct);
         if (load is null) return Result.Failure(LoadErrors.NotFound);
+
+        // Validate against the local read-model fed by Carrier integration events.
+        if (!await carriers.IsVerifiedAsync(command.CarrierId, ct))
+            return Result.Failure(LoadErrors.CarrierNotAssignable);
 
         var result = load.AssignCarrier(command.CarrierId);
         if (result.IsFailure) return result;

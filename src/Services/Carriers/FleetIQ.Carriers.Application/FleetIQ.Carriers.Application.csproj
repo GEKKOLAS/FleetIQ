@@ -5,5 +5,6 @@
   <ItemGroup>
     <ProjectReference Include="../FleetIQ.Carriers.Domain/FleetIQ.Carriers.Domain.csproj" />
     <ProjectReference Include="../../../BuildingBlocks/FleetIQ.BuildingBlocks.Application/FleetIQ.BuildingBlocks.Application.csproj" />
+    <ProjectReference Include="../../../Contracts/FleetIQ.Contracts/FleetIQ.Contracts.csproj" />
   </ItemGroup>
 </Project>

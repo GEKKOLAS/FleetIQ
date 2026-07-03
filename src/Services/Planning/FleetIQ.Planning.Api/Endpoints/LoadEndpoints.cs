@@ -92,7 +92,7 @@ public static class LoadEndpoints
         var status = error.Code.EndsWith("NotFound") ? StatusCodes.Status404NotFound
             : error.Code is "Load.NotDraft" or "Load.NotPlanned" or "Load.AlreadyFinished"
               or "Load.NoOrders" or "Load.NoCarrier" or "Load.NoRoute"
-              or "Route.NotFinalized" or "Route.WrongLoad"
+              or "Route.NotFinalized" or "Route.WrongLoad" or "Load.CarrierNotAssignable"
                 ? StatusCodes.Status409Conflict : StatusCodes.Status400BadRequest;
         return Results.Problem(detail: error.Description, title: error.Code, statusCode: status);
     }

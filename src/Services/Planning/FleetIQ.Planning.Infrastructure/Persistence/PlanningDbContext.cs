@@ -3,6 +3,7 @@ using FleetIQ.BuildingBlocks.Application;
 using FleetIQ.BuildingBlocks.Domain;
 using FleetIQ.BuildingBlocks.Infrastructure.Outbox;
 using FleetIQ.Planning.Domain;
+using FleetIQ.Planning.Infrastructure.Persistence.ReadModels;
 using Microsoft.EntityFrameworkCore;
 
 namespace FleetIQ.Planning.Infrastructure.Persistence;
@@ -13,6 +14,7 @@ public sealed class PlanningDbContext(DbContextOptions<PlanningDbContext> option
     public DbSet<Load> Loads => Set<Load>();
     public DbSet<Route> Routes => Set<Route>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
+    public DbSet<CarrierView> CarrierViews => Set<CarrierView>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -55,6 +57,11 @@ public sealed class PlanningDbContext(DbContextOptions<PlanningDbContext> option
         stop.Property(x => x.Kind).HasConversion<int>();
         stop.Property(x => x.City).HasMaxLength(200);
         stop.Property(x => x.Address).HasMaxLength(400);
+
+        var carrierView = modelBuilder.Entity<CarrierView>();
+        carrierView.ToTable("carrier_views");
+        carrierView.HasKey(x => x.CarrierId);
+        carrierView.Property(x => x.LegalName).HasMaxLength(400);
 
         var outbox = modelBuilder.Entity<OutboxMessage>();
         outbox.ToTable("outbox_messages");

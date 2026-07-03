@@ -11,6 +11,7 @@ public static class LoadErrors
     public static readonly Error NotDraft = new("Load.NotDraft", "The load can only be modified while in Draft.");
     public static readonly Error NoOrders = new("Load.NoOrders", "The load needs at least one order before it can be planned.");
     public static readonly Error NoCarrier = new("Load.NoCarrier", "Assign a carrier before planning the load.");
+    public static readonly Error CarrierNotAssignable = new("Load.CarrierNotAssignable", "The carrier does not exist or is not verified.");
     public static readonly Error NoRoute = new("Load.NoRoute", "Attach a finalized route before planning the load.");
     public static readonly Error NotPlanned = new("Load.NotPlanned", "The load must be Planned before it can be confirmed.");
     public static readonly Error AlreadyFinished = new("Load.AlreadyFinished", "The load is already confirmed or cancelled.");

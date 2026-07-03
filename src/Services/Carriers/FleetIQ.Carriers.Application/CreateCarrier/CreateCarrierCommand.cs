@@ -12,9 +12,9 @@ public sealed class CreateCarrierCommandValidator : AbstractValidator<CreateCarr
 {
     public CreateCarrierCommandValidator()
     {
-        RuleFor(x => x.LegalName).NotEmpty();
-        RuleFor(x => x.RegistrationNumber).NotEmpty();
-        RuleFor(x => x.Country).NotEmpty();
+        RuleFor(x => x.LegalName).NotEmpty().MaximumLength(400);
+        RuleFor(x => x.RegistrationNumber).NotEmpty().MaximumLength(400);
+        RuleFor(x => x.Country).NotEmpty().MaximumLength(400);
     }
 }
 
@@ -23,9 +23,11 @@ public sealed class CreateCarrierCommandHandler(ICarrierRepository repository, I
 {
     public async Task<Result<Guid>> Handle(CreateCarrierCommand command, CancellationToken ct)
     {
-        var entity = Carrier.Create(command.LegalName, command.RegistrationNumber, command.Country);
-        await repository.AddAsync(entity, ct);
+        var result = Carrier.Create(command.LegalName, command.RegistrationNumber, command.Country);
+        if (result.IsFailure) return Result.Failure<Guid>(result.Error);
+
+        await repository.AddAsync(result.Value, ct);
         await unitOfWork.SaveChangesAsync(ct);
-        return Result.Success(entity.Id);
+        return Result.Success(result.Value.Id);
     }
 }

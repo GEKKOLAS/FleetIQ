@@ -80,9 +80,100 @@ namespace FleetIQ.Carriers.Infrastructure.Persistence.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
+                    b.Property<DateTime?>("SuspendedOnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("VerifiedOnUtc")
+                        .HasColumnType("timestamp with time zone");
+
                     b.HasKey("Id");
 
+                    b.HasIndex("Status");
+
                     b.ToTable("carriers", "carriers");
+                });
+
+            modelBuilder.Entity("FleetIQ.Carriers.Domain.Driver", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("CarrierId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("LicenceNumber")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CarrierId");
+
+                    b.ToTable("drivers", "carriers");
+                });
+
+            modelBuilder.Entity("FleetIQ.Carriers.Domain.Vehicle", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("CapacityKg")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<Guid?>("CarrierId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Plate")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CarrierId");
+
+                    b.ToTable("vehicles", "carriers");
+                });
+
+            modelBuilder.Entity("FleetIQ.Carriers.Domain.Driver", b =>
+                {
+                    b.HasOne("FleetIQ.Carriers.Domain.Carrier", null)
+                        .WithMany("Drivers")
+                        .HasForeignKey("CarrierId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("FleetIQ.Carriers.Domain.Vehicle", b =>
+                {
+                    b.HasOne("FleetIQ.Carriers.Domain.Carrier", null)
+                        .WithMany("Vehicles")
+                        .HasForeignKey("CarrierId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("FleetIQ.Carriers.Domain.Carrier", b =>
+                {
+                    b.Navigation("Drivers");
+
+                    b.Navigation("Vehicles");
                 });
 #pragma warning restore 612, 618
         }
