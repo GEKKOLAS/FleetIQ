@@ -20,9 +20,21 @@ public sealed class AnalyticsDbContext(DbContextOptions<AnalyticsDbContext> opti
         var e = modelBuilder.Entity<ReportDefinition>();
         e.ToTable("reportdefinitions");
         e.HasKey(x => x.Id);
+        e.Ignore(x => x.IsTransient);
         e.Property(x => x.Status).HasConversion<int>();
         e.Property(x => x.Name).HasMaxLength(400);
-        e.Property(x => x.Query).HasMaxLength(400);
+        e.Property(x => x.Query).HasMaxLength(2000);
+        e.Property(x => x.Schedule).HasMaxLength(20);
+        e.HasIndex(x => x.Status);
+
+        e.OwnsMany(x => x.Runs, r =>
+        {
+            r.ToTable("report_runs");
+            r.WithOwner().HasForeignKey("ReportDefinitionId");
+            r.HasKey("Id");
+            r.Ignore(p => p.IsTransient);
+            r.Property(p => p.Error).HasMaxLength(1000);
+        });
 
         var o = modelBuilder.Entity<OutboxMessage>();
         o.ToTable("outbox_messages");
@@ -36,6 +48,12 @@ public sealed class AnalyticsDbContext(DbContextOptions<AnalyticsDbContext> opti
 
     public override async Task<int> SaveChangesAsync(CancellationToken ct = default)
     {
+        // Same guard as Billing/Tracking: a brand-new child (ReportRun) added to an already-tracked
+        // ReportDefinition can be mis-classified by EF as Modified -> UPDATE affecting 0 rows.
+        foreach (var entry in ChangeTracker.Entries<Entity<Guid>>())
+            if (entry.Entity.IsTransient && entry.State is EntityState.Modified or EntityState.Unchanged)
+                entry.State = EntityState.Added;
+
         var messages = ChangeTracker.Entries<AggregateRoot<Guid>>()
             .Select(entry => entry.Entity)
             .SelectMany(aggregate =>

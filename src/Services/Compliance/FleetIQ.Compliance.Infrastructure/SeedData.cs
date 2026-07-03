@@ -11,11 +11,16 @@ public static class SeedData
     {
         if (await db.ComplianceChecks.AnyAsync()) return;
 
-        db.ComplianceChecks.AddRange(
-            ComplianceCheck.Create(Guid.NewGuid(), "RuleCode 1", "Jurisdiction 1"),
-            ComplianceCheck.Create(Guid.NewGuid(), "RuleCode 2", "Jurisdiction 2"),
-            ComplianceCheck.Create(Guid.NewGuid(), "RuleCode 3", "Jurisdiction 3"));
+        var hos = ComplianceCheck.Create(Guid.NewGuid(), "Driver", "HOS-11H", "EU").Value;
+        hos.AddFinding("HOS-11H", "High", "Driver exceeded 11h daily driving limit twice this week.");
+        hos.Fail();
 
+        var insurance = ComplianceCheck.Create(Guid.NewGuid(), "Carrier", "INS-VALID", "ES").Value;
+        insurance.Pass();
+
+        var customs = ComplianceCheck.Create(Guid.NewGuid(), "Shipment", "CUSTOMS-T1", "EU").Value;
+
+        db.ComplianceChecks.AddRange(hos, insurance, customs);
         await db.SaveChangesAsync();
     }
 }

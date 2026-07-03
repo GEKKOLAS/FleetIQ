@@ -3,6 +3,7 @@ using FleetIQ.BuildingBlocks.Domain;
 using FleetIQ.Compliance.Application.Abstractions;
 using FleetIQ.Compliance.Application.CreateComplianceCheck;
 using FleetIQ.Compliance.Application.GetComplianceCheck;
+using FleetIQ.Compliance.Application.ListComplianceChecks;
 using FluentValidation;
 
 namespace FleetIQ.Compliance.Api.Endpoints;
@@ -26,6 +27,15 @@ public static class ComplianceCheckEndpoints
             return result.IsSuccess
                 ? Results.Created($"/compliancechecks/{result.Value}", new { id = result.Value })
                 : Results.BadRequest(new { result.Error.Code, result.Error.Description });
+        });
+
+        // LIST recent - powers the future Compliance page in the SPA.
+        group.MapGet("/", async (
+            int? take,
+            IQueryHandler<ListComplianceChecksQuery, IReadOnlyList<ComplianceCheckListItem>> handler,
+            CancellationToken ct) =>
+        {
+            return Results.Ok(await handler.Handle(new ListComplianceChecksQuery(take ?? 20), ct));
         });
 
         group.MapGet("/{id:guid}", async (
@@ -53,5 +63,61 @@ public static class ComplianceCheckEndpoints
             await unitOfWork.SaveChangesAsync(ct);
             return Results.NoContent();
         });
+
+        // Record a finding while the check is Pending.
+        group.MapPost("/{id:guid}/findings", async (
+            Guid id,
+            AddFindingRequest request,
+            IComplianceCheckRepository repository,
+            IUnitOfWork unitOfWork,
+            CancellationToken ct) =>
+        {
+            var entity = await repository.GetByIdAsync(id, ct);
+            if (entity is null) return Results.NotFound();
+
+            var result = entity.AddFinding(request.Code ?? string.Empty, request.Severity, request.Message);
+            if (result.IsFailure) return Results.BadRequest(new { result.Error.Code, result.Error.Description });
+
+            await unitOfWork.SaveChangesAsync(ct);
+            return Results.NoContent();
+        });
+
+        // State transition: Fail -> Failed (requires at least one finding)
+        group.MapPost("/{id:guid}/fail", async (
+            Guid id,
+            IComplianceCheckRepository repository,
+            IUnitOfWork unitOfWork,
+            CancellationToken ct) =>
+        {
+            var entity = await repository.GetByIdAsync(id, ct);
+            if (entity is null) return Results.NotFound();
+
+            var result = entity.Fail();
+            if (result.IsFailure) return Results.BadRequest(new { result.Error.Code, result.Error.Description });
+
+            await unitOfWork.SaveChangesAsync(ct);
+            return Results.NoContent();
+        });
+
+        // State transition: Waive a Failed check (with a documented reason)
+        group.MapPost("/{id:guid}/waive", async (
+            Guid id,
+            WaiveRequest request,
+            IComplianceCheckRepository repository,
+            IUnitOfWork unitOfWork,
+            CancellationToken ct) =>
+        {
+            var entity = await repository.GetByIdAsync(id, ct);
+            if (entity is null) return Results.NotFound();
+
+            var result = entity.Waive(request.Reason);
+            if (result.IsFailure) return Results.BadRequest(new { result.Error.Code, result.Error.Description });
+
+            await unitOfWork.SaveChangesAsync(ct);
+            return Results.NoContent();
+        });
     }
 }
+
+public sealed record AddFindingRequest(string? Code, string Severity, string Message);
+public sealed record WaiveRequest(string Reason);

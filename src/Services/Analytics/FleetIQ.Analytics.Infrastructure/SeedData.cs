@@ -11,11 +11,15 @@ public static class SeedData
     {
         if (await db.ReportDefinitions.AnyAsync()) return;
 
-        db.ReportDefinitions.AddRange(
-            ReportDefinition.Create("Name 1", "Query 1"),
-            ReportDefinition.Create("Name 2", "Query 2"),
-            ReportDefinition.Create("Name 3", "Query 3"));
+        var onTime = ReportDefinition.Create("Weekly on-time delivery", "SELECT carrier, avg(delay_min) FROM shipments GROUP BY carrier", "Weekly").Value;
+        var revenue = ReportDefinition.Create("Monthly invoiced revenue", "SELECT currency, sum(total) FROM invoices WHERE status = 'Issued' GROUP BY currency", "Monthly").Value;
+        var utilization = ReportDefinition.Create("Fleet utilization", "SELECT carrier, sum(weight_kg) / sum(capacity_kg) FROM loads GROUP BY carrier", "Daily").Value;
 
+        // Give one report a bit of history so the runs table has something to show.
+        var run = onTime.StartRun();
+        if (run.IsSuccess) onTime.CompleteRun(run.Value, 42);
+
+        db.ReportDefinitions.AddRange(onTime, revenue, utilization);
         await db.SaveChangesAsync();
     }
 }

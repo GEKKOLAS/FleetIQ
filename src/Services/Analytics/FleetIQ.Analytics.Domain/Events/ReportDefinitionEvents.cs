@@ -11,3 +11,13 @@ public sealed record ReportDefinitionStatusChangedDomainEvent(Guid ReportDefinit
 {
     public DateTime OccurredOnUtc { get; } = DateTime.UtcNow;
 }
+
+public sealed record ReportRunStartedDomainEvent(Guid ReportDefinitionId, Guid RunId) : IDomainEvent
+{
+    public DateTime OccurredOnUtc { get; } = DateTime.UtcNow;
+}
+
+public sealed record ReportRunCompletedDomainEvent(Guid ReportDefinitionId, Guid RunId, bool Succeeded) : IDomainEvent
+{
+    public DateTime OccurredOnUtc { get; } = DateTime.UtcNow;
+}

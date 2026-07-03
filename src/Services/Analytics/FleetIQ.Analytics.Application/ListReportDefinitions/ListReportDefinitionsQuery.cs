@@ -6,7 +6,8 @@ namespace FleetIQ.Analytics.Application.ListReportDefinitions;
 public sealed record ListReportDefinitionsQuery(int Take) : IQuery<IReadOnlyList<ReportDefinitionListItem>>;
 
 public sealed record ReportDefinitionListItem(
-    Guid Id, string Name, string Query, string Status, DateTime CreatedOnUtc);
+    Guid Id, string Name, string Query, string Schedule, string Status, DateTime CreatedOnUtc,
+    DateTime? LastRunOnUtc, int RunCount);
 
 public sealed class ListReportDefinitionsQueryHandler(IReportDefinitionRepository repository)
     : IQueryHandler<ListReportDefinitionsQuery, IReadOnlyList<ReportDefinitionListItem>>
@@ -15,7 +16,9 @@ public sealed class ListReportDefinitionsQueryHandler(IReportDefinitionRepositor
     {
         var items = await repository.ListRecentAsync(query.Take, ct);
         return items
-            .Select(r => new ReportDefinitionListItem(r.Id, r.Name, r.Query, r.Status.ToString(), r.CreatedOnUtc))
+            .Select(r => new ReportDefinitionListItem(
+                r.Id, r.Name, r.Query, r.Schedule, r.Status.ToString(), r.CreatedOnUtc,
+                r.LastRunOnUtc, r.Runs.Count))
             .ToList();
     }
 }

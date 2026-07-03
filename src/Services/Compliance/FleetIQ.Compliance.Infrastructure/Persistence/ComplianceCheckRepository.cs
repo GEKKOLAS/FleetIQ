@@ -10,4 +10,13 @@ public sealed class ComplianceCheckRepository(ComplianceDbContext db) : IComplia
 
     public Task<ComplianceCheck?> GetByIdAsync(Guid id, CancellationToken ct) =>
         db.ComplianceChecks.FirstOrDefaultAsync(x => x.Id == id, ct);
+
+    public async Task<IReadOnlyList<ComplianceCheck>> ListRecentAsync(int take, CancellationToken ct)
+    {
+        take = take is < 1 or > 100 ? 20 : take;
+        return await db.ComplianceChecks.AsNoTracking()
+            .OrderByDescending(c => c.CreatedOnUtc)
+            .Take(take)
+            .ToListAsync(ct);
+    }
 }

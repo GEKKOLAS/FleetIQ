@@ -22,9 +22,11 @@ public sealed class CreateIntegrationConnectorCommandHandler(IIntegrationConnect
 {
     public async Task<Result<Guid>> Handle(CreateIntegrationConnectorCommand command, CancellationToken ct)
     {
-        var entity = IntegrationConnector.Create(command.SystemName, command.Endpoint);
-        await repository.AddAsync(entity, ct);
+        var created = IntegrationConnector.Create(command.SystemName, command.Endpoint);
+        if (created.IsFailure) return Result.Failure<Guid>(created.Error);
+
+        await repository.AddAsync(created.Value, ct);
         await unitOfWork.SaveChangesAsync(ct);
-        return Result.Success(entity.Id);
+        return Result.Success(created.Value.Id);
     }
 }

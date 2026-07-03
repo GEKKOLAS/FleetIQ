@@ -6,7 +6,7 @@ using FleetIQ.Analytics.Domain;
 
 namespace FleetIQ.Analytics.Application.CreateReportDefinition;
 
-public sealed record CreateReportDefinitionCommand(string Name, string Query) : ICommand<Result<Guid>>;
+public sealed record CreateReportDefinitionCommand(string Name, string Query, string Schedule = "OnDemand") : ICommand<Result<Guid>>;
 
 public sealed class CreateReportDefinitionCommandValidator : AbstractValidator<CreateReportDefinitionCommand>
 {
@@ -22,9 +22,11 @@ public sealed class CreateReportDefinitionCommandHandler(IReportDefinitionReposi
 {
     public async Task<Result<Guid>> Handle(CreateReportDefinitionCommand command, CancellationToken ct)
     {
-        var entity = ReportDefinition.Create(command.Name, command.Query);
-        await repository.AddAsync(entity, ct);
+        var created = ReportDefinition.Create(command.Name, command.Query, command.Schedule);
+        if (created.IsFailure) return Result.Failure<Guid>(created.Error);
+
+        await repository.AddAsync(created.Value, ct);
         await unitOfWork.SaveChangesAsync(ct);
-        return Result.Success(entity.Id);
+        return Result.Success(created.Value.Id);
     }
 }

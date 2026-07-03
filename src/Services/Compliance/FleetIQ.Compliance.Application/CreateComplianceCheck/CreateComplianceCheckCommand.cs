@@ -6,7 +6,7 @@ using FleetIQ.Compliance.Domain;
 
 namespace FleetIQ.Compliance.Application.CreateComplianceCheck;
 
-public sealed record CreateComplianceCheckCommand(Guid SubjectId, string RuleCode, string Jurisdiction) : ICommand<Result<Guid>>;
+public sealed record CreateComplianceCheckCommand(Guid SubjectId, string RuleCode, string Jurisdiction, string SubjectType = "Carrier") : ICommand<Result<Guid>>;
 
 public sealed class CreateComplianceCheckCommandValidator : AbstractValidator<CreateComplianceCheckCommand>
 {
@@ -23,9 +23,11 @@ public sealed class CreateComplianceCheckCommandHandler(IComplianceCheckReposito
 {
     public async Task<Result<Guid>> Handle(CreateComplianceCheckCommand command, CancellationToken ct)
     {
-        var entity = ComplianceCheck.Create(command.SubjectId, command.RuleCode, command.Jurisdiction);
-        await repository.AddAsync(entity, ct);
+        var created = ComplianceCheck.Create(command.SubjectId, command.SubjectType, command.RuleCode, command.Jurisdiction);
+        if (created.IsFailure) return Result.Failure<Guid>(created.Error);
+
+        await repository.AddAsync(created.Value, ct);
         await unitOfWork.SaveChangesAsync(ct);
-        return Result.Success(entity.Id);
+        return Result.Success(created.Value.Id);
     }
 }

@@ -11,3 +11,8 @@ public sealed record ComplianceCheckStatusChangedDomainEvent(Guid ComplianceChec
 {
     public DateTime OccurredOnUtc { get; } = DateTime.UtcNow;
 }
+
+public sealed record ComplianceFindingAddedDomainEvent(Guid ComplianceCheckId, string Severity) : IDomainEvent
+{
+    public DateTime OccurredOnUtc { get; } = DateTime.UtcNow;
+}
