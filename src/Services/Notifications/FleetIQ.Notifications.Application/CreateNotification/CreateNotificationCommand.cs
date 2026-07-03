@@ -23,9 +23,11 @@ public sealed class CreateNotificationCommandHandler(INotificationRepository rep
 {
     public async Task<Result<Guid>> Handle(CreateNotificationCommand command, CancellationToken ct)
     {
-        var entity = Notification.Create(command.Recipient, command.Channel, command.TemplateId);
-        await repository.AddAsync(entity, ct);
+        var created = Notification.Create(command.Recipient, command.Channel, command.TemplateId);
+        if (created.IsFailure) return Result.Failure<Guid>(created.Error);
+
+        await repository.AddAsync(created.Value, ct);
         await unitOfWork.SaveChangesAsync(ct);
-        return Result.Success(entity.Id);
+        return Result.Success(created.Value.Id);
     }
 }

@@ -11,3 +11,8 @@ public sealed record NotificationStatusChangedDomainEvent(Guid NotificationId, s
 {
     public DateTime OccurredOnUtc { get; } = DateTime.UtcNow;
 }
+
+public sealed record NotificationFailedDomainEvent(Guid NotificationId, string Reason, int AttemptCount) : IDomainEvent
+{
+    public DateTime OccurredOnUtc { get; } = DateTime.UtcNow;
+}

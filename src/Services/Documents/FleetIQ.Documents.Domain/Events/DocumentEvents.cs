@@ -11,3 +11,8 @@ public sealed record DocumentStatusChangedDomainEvent(Guid DocumentId, string St
 {
     public DateTime OccurredOnUtc { get; } = DateTime.UtcNow;
 }
+
+public sealed record DocumentVersionAddedDomainEvent(Guid DocumentId, int Number) : IDomainEvent
+{
+    public DateTime OccurredOnUtc { get; } = DateTime.UtcNow;
+}

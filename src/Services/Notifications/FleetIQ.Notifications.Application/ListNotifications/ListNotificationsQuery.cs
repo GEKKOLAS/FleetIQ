@@ -6,7 +6,8 @@ namespace FleetIQ.Notifications.Application.ListNotifications;
 public sealed record ListNotificationsQuery(int Take) : IQuery<IReadOnlyList<NotificationResponse>>;
 
 public sealed record NotificationResponse(
-    Guid Id, string Recipient, string Channel, string TemplateId, string Status, DateTime CreatedOnUtc);
+    Guid Id, string Recipient, string Channel, string TemplateId, string Status, DateTime CreatedOnUtc,
+    int AttemptCount, DateTime? SentOnUtc, string? FailedReason);
 
 public sealed class ListNotificationsQueryHandler(INotificationRepository repository)
     : IQueryHandler<ListNotificationsQuery, IReadOnlyList<NotificationResponse>>
@@ -15,7 +16,9 @@ public sealed class ListNotificationsQueryHandler(INotificationRepository reposi
     {
         var items = await repository.ListRecentAsync(query.Take, ct);
         return items
-            .Select(n => new NotificationResponse(n.Id, n.Recipient, n.Channel, n.TemplateId, n.Status.ToString(), n.CreatedOnUtc))
+            .Select(n => new NotificationResponse(
+                n.Id, n.Recipient, n.Channel, n.TemplateId, n.Status.ToString(), n.CreatedOnUtc,
+                n.AttemptCount, n.SentOnUtc, n.FailedReason))
             .ToList();
     }
 }

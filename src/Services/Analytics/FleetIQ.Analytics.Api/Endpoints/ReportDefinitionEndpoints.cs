@@ -3,6 +3,7 @@ using FleetIQ.BuildingBlocks.Domain;
 using FleetIQ.Analytics.Application.Abstractions;
 using FleetIQ.Analytics.Application.CreateReportDefinition;
 using FleetIQ.Analytics.Application.GetReportDefinition;
+using FleetIQ.Analytics.Application.ListReportDefinitions;
 using FluentValidation;
 
 namespace FleetIQ.Analytics.Api.Endpoints;
@@ -26,6 +27,15 @@ public static class ReportDefinitionEndpoints
             return result.IsSuccess
                 ? Results.Created($"/reportdefinitions/{result.Value}", new { id = result.Value })
                 : Results.BadRequest(new { result.Error.Code, result.Error.Description });
+        });
+
+        // LIST recent - powers the Analytics page in the SPA.
+        group.MapGet("/", async (
+            int? take,
+            IQueryHandler<ListReportDefinitionsQuery, IReadOnlyList<ReportDefinitionListItem>> handler,
+            CancellationToken ct) =>
+        {
+            return Results.Ok(await handler.Handle(new ListReportDefinitionsQuery(take ?? 20), ct));
         });
 
         group.MapGet("/{id:guid}", async (

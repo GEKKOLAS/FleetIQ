@@ -20,10 +20,13 @@ public sealed class NotificationsDbContext(DbContextOptions<NotificationsDbConte
         var e = modelBuilder.Entity<Notification>();
         e.ToTable("notifications");
         e.HasKey(x => x.Id);
+        e.Ignore(x => x.IsTransient);
         e.Property(x => x.Status).HasConversion<int>();
         e.Property(x => x.Recipient).HasMaxLength(400);
-        e.Property(x => x.Channel).HasMaxLength(400);
+        e.Property(x => x.Channel).HasMaxLength(20);
         e.Property(x => x.TemplateId).HasMaxLength(400);
+        e.Property(x => x.FailedReason).HasMaxLength(500);
+        e.HasIndex(x => x.Status);
 
         var o = modelBuilder.Entity<OutboxMessage>();
         o.ToTable("outbox_messages");

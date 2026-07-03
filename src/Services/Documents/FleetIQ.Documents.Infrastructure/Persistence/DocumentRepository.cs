@@ -10,4 +10,13 @@ public sealed class DocumentRepository(DocumentsDbContext db) : IDocumentReposit
 
     public Task<Document?> GetByIdAsync(Guid id, CancellationToken ct) =>
         db.Documents.FirstOrDefaultAsync(x => x.Id == id, ct);
+
+    public async Task<IReadOnlyList<Document>> ListRecentAsync(int take, CancellationToken ct)
+    {
+        take = take is < 1 or > 100 ? 20 : take;
+        return await db.Documents.AsNoTracking()
+            .OrderByDescending(d => d.CreatedOnUtc)
+            .Take(take)
+            .ToListAsync(ct);
+    }
 }

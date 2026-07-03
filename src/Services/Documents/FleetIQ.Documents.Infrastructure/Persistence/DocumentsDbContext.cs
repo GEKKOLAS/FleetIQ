@@ -20,9 +20,23 @@ public sealed class DocumentsDbContext(DbContextOptions<DocumentsDbContext> opti
         var e = modelBuilder.Entity<Document>();
         e.ToTable("documents");
         e.HasKey(x => x.Id);
+        e.Ignore(x => x.IsTransient);
+        e.Ignore(x => x.IsExpired);
         e.Property(x => x.Status).HasConversion<int>();
         e.Property(x => x.Category).HasMaxLength(400);
         e.Property(x => x.StorageRef).HasMaxLength(400);
+        e.Property(x => x.RejectedReason).HasMaxLength(500);
+        e.HasIndex(x => x.OwnerId);
+        e.HasIndex(x => x.Status);
+
+        e.OwnsMany(x => x.Versions, v =>
+        {
+            v.ToTable("document_versions");
+            v.WithOwner().HasForeignKey("DocumentId");
+            v.HasKey("Id");
+            v.Ignore(p => p.IsTransient);
+            v.Property(p => p.StorageRef).HasMaxLength(400);
+        });
 
         var o = modelBuilder.Entity<OutboxMessage>();
         o.ToTable("outbox_messages");
@@ -36,6 +50,13 @@ public sealed class DocumentsDbContext(DbContextOptions<DocumentsDbContext> opti
 
     public override async Task<int> SaveChangesAsync(CancellationToken ct = default)
     {
+        // Same guard as Billing/Tracking: a brand-new child (DocumentVersion) added to an
+        // already-tracked Document can be mis-classified by EF as Modified -> UPDATE affecting
+        // 0 rows -> DbUpdateConcurrencyException. Forcing transient entities to Added fixes it.
+        foreach (var entry in ChangeTracker.Entries<Entity<Guid>>())
+            if (entry.Entity.IsTransient && entry.State is EntityState.Modified or EntityState.Unchanged)
+                entry.State = EntityState.Added;
+
         var messages = ChangeTracker.Entries<AggregateRoot<Guid>>()
             .Select(entry => entry.Entity)
             .SelectMany(aggregate =>

@@ -14,12 +14,19 @@ public sealed class InvoiceIssuedConsumer(NotificationsDbContext db, ILogger<Inv
     {
         var message = context.Message;
 
-        var notification = Notification.Create($"customer:{message.CustomerId}", "Email", "invoice-issued");
-        db.Notifications.Add(notification);
+        var created = Notification.Create($"customer:{message.CustomerId}", "Email", "invoice-issued");
+        if (created.IsFailure)
+        {
+            logger.LogWarning("[Notifications] Invoice {InvoiceId} issued but notification rejected: {Error}",
+                message.InvoiceId, created.Error.Description);
+            return;
+        }
+
+        db.Notifications.Add(created.Value);
         await db.SaveChangesAsync(context.CancellationToken);
 
         logger.LogInformation(
             "[Notifications] Invoice {InvoiceId} issued ({Total} {Currency}) -> notification {NotificationId} created",
-            message.InvoiceId, message.Total, message.Currency, notification.Id);
+            message.InvoiceId, message.Total, message.Currency, created.Value.Id);
     }
 }

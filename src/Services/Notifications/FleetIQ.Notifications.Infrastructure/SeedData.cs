@@ -12,9 +12,9 @@ public static class SeedData
         if (await db.Notifications.AnyAsync()) return;
 
         db.Notifications.AddRange(
-            Notification.Create("Recipient 1", "Channel 1", "TemplateId 1"),
-            Notification.Create("Recipient 2", "Channel 2", "TemplateId 2"),
-            Notification.Create("Recipient 3", "Channel 3", "TemplateId 3"));
+            Notification.Create("ops@acme-logistics.io", "Email", "shipment-delayed").Value,
+            Notification.Create("+34600111222", "Sms", "delivery-confirmed").Value,
+            Notification.Create("driver:7f3a", "Push", "new-load-assigned").Value);
 
         await db.SaveChangesAsync();
     }

@@ -14,6 +14,8 @@ public sealed class GetNotificationQueryHandler(INotificationRepository reposito
         var entity = await repository.GetByIdAsync(query.Id, ct);
         return entity is null
             ? null
-            : new NotificationResponse(entity.Id, entity.Recipient, entity.Channel, entity.TemplateId, entity.Status.ToString(), entity.CreatedOnUtc);
+            : new NotificationResponse(
+                entity.Id, entity.Recipient, entity.Channel, entity.TemplateId, entity.Status.ToString(), entity.CreatedOnUtc,
+                entity.AttemptCount, entity.SentOnUtc, entity.FailedReason);
     }
 }

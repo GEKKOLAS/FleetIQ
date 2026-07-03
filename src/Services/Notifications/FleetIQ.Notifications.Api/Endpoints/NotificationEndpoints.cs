@@ -59,5 +59,38 @@ public static class NotificationEndpoints
             await unitOfWork.SaveChangesAsync(ct);
             return Results.NoContent();
         });
+
+        // Record a delivery failure (with the provider's reason).
+        group.MapPost("/{id:guid}/markfailed", async (
+            Guid id,
+            MarkNotificationFailedRequest request,
+            INotificationRepository repository,
+            IUnitOfWork unitOfWork,
+            CancellationToken ct) =>
+        {
+            var entity = await repository.GetByIdAsync(id, ct);
+            if (entity is null) return Results.NotFound();
+            var result = entity.MarkFailed(request.Reason);
+            if (result.IsFailure) return Results.BadRequest(new { result.Error.Code, result.Error.Description });
+            await unitOfWork.SaveChangesAsync(ct);
+            return Results.NoContent();
+        });
+
+        // Re-queue a failed notification (until MaxAttempts).
+        group.MapPost("/{id:guid}/retry", async (
+            Guid id,
+            INotificationRepository repository,
+            IUnitOfWork unitOfWork,
+            CancellationToken ct) =>
+        {
+            var entity = await repository.GetByIdAsync(id, ct);
+            if (entity is null) return Results.NotFound();
+            var result = entity.Retry();
+            if (result.IsFailure) return Results.BadRequest(new { result.Error.Code, result.Error.Description });
+            await unitOfWork.SaveChangesAsync(ct);
+            return Results.NoContent();
+        });
     }
 }
+
+public sealed record MarkNotificationFailedRequest(string Reason);
