@@ -17,10 +17,19 @@ All 12 bounded-context services in the monorepo. Each has its own database (data
 | 11 | Integration | IntegrationConnector | fleetiq_integration | /integrationconnectors |
 | 12 | Intelligence | PredictionRequest | fleetiq_intelligence | /predictionrequests |
 
-## Status of each scaffold
+## Status of each service
 
 - **Orders** is the fully-modeled exemplar (value objects, child entities, owned types).
-- The other 11 are **consistent lean scaffolds**: a primitive-property aggregate with a `Create` factory, one state transition (with a `Result`-based rule), a create command + query, EF Core persistence, REST endpoints, and a domain unit test. Deepen each one per the conceptual map (`FleetIQ_Architecture_Map.html`).
+- **Carriers, Planning, Tracking, Billing** are deepened: child entities, full state machines, cross-service event flows (e.g. InvoiceIssued -> Notifications).
+- **Documents, Notifications, Analytics, Compliance, Integration, Intelligence** are deepened (2026-07-03):
+  - *Documents*: versions (child), expiry, Uploaded -> Verified | Rejected -> re-upload -> Archived.
+  - *Notifications*: validated channel, Pending -> Sent | Failed(+reason) -> Retry (max 5 attempts).
+  - *Analytics*: schedule (OnDemand/Daily/Weekly/Monthly) + ReportRun history (child).
+  - *Compliance*: findings (child) with severity; Pass blocked by High/Critical findings; Fail requires findings; Waive with reason.
+  - *Integration*: endpoint URL validation, sync health, auto-disable after 3 consecutive failures.
+  - *Intelligence*: Requested -> Running -> Completed(result+confidence 0..1) | Failed(+error).
+  All have `GET /` list endpoints, richer detail responses, `DeepenDomain` EF migrations and domain unit tests (46 green).
+- **Identity** remains a lean scaffold (auth itself lives in Duende IdentityServer).
 
 ## Run a service
 ```bash

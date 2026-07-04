@@ -32,6 +32,9 @@ namespace FleetIQ.Analytics.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("CreatedOnUtc")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime?>("LastRunOnUtc")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(400)
@@ -39,13 +42,20 @@ namespace FleetIQ.Analytics.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("Query")
                         .IsRequired()
-                        .HasMaxLength(400)
-                        .HasColumnType("character varying(400)");
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("Schedule")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Status");
 
                     b.ToTable("reportdefinitions", "analytics");
                 });
@@ -78,6 +88,46 @@ namespace FleetIQ.Analytics.Infrastructure.Persistence.Migrations
                     b.HasIndex("ProcessedOnUtc");
 
                     b.ToTable("outbox_messages", "analytics");
+                });
+
+            modelBuilder.Entity("FleetIQ.Analytics.Domain.ReportDefinition", b =>
+                {
+                    b.OwnsMany("FleetIQ.Analytics.Domain.ReportRun", "Runs", b1 =>
+                        {
+                            b1.Property<Guid>("Id")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("uuid");
+
+                            b1.Property<DateTime?>("CompletedOnUtc")
+                                .HasColumnType("timestamp with time zone");
+
+                            b1.Property<string>("Error")
+                                .HasMaxLength(1000)
+                                .HasColumnType("character varying(1000)");
+
+                            b1.Property<Guid>("ReportDefinitionId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<int?>("RowCount")
+                                .HasColumnType("integer");
+
+                            b1.Property<DateTime>("StartedOnUtc")
+                                .HasColumnType("timestamp with time zone");
+
+                            b1.Property<bool?>("Succeeded")
+                                .HasColumnType("boolean");
+
+                            b1.HasKey("Id");
+
+                            b1.HasIndex("ReportDefinitionId");
+
+                            b1.ToTable("report_runs", "analytics");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ReportDefinitionId");
+                        });
+
+                    b.Navigation("Runs");
                 });
 #pragma warning restore 612, 618
         }

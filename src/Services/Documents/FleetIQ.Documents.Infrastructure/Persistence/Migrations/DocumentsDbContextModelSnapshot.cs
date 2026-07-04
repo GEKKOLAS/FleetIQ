@@ -67,8 +67,15 @@ namespace FleetIQ.Documents.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("CreatedOnUtc")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime?>("ExpiresOnUtc")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<Guid>("OwnerId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("RejectedReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
@@ -78,9 +85,51 @@ namespace FleetIQ.Documents.Infrastructure.Persistence.Migrations
                         .HasMaxLength(400)
                         .HasColumnType("character varying(400)");
 
+                    b.Property<DateTime?>("VerifiedOnUtc")
+                        .HasColumnType("timestamp with time zone");
+
                     b.HasKey("Id");
 
+                    b.HasIndex("OwnerId");
+
+                    b.HasIndex("Status");
+
                     b.ToTable("documents", "documents");
+                });
+
+            modelBuilder.Entity("FleetIQ.Documents.Domain.Document", b =>
+                {
+                    b.OwnsMany("FleetIQ.Documents.Domain.DocumentVersion", "Versions", b1 =>
+                        {
+                            b1.Property<Guid>("Id")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("uuid");
+
+                            b1.Property<Guid>("DocumentId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<int>("Number")
+                                .HasColumnType("integer");
+
+                            b1.Property<string>("StorageRef")
+                                .IsRequired()
+                                .HasMaxLength(400)
+                                .HasColumnType("character varying(400)");
+
+                            b1.Property<DateTime>("UploadedOnUtc")
+                                .HasColumnType("timestamp with time zone");
+
+                            b1.HasKey("Id");
+
+                            b1.HasIndex("DocumentId");
+
+                            b1.ToTable("document_versions", "documents");
+
+                            b1.WithOwner()
+                                .HasForeignKey("DocumentId");
+                        });
+
+                    b.Navigation("Versions");
                 });
 #pragma warning restore 612, 618
         }

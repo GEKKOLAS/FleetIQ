@@ -59,13 +59,23 @@ namespace FleetIQ.Integration.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<int>("ConsecutiveFailures")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("CreatedOnUtc")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DisabledReason")
+                        .HasMaxLength(600)
+                        .HasColumnType("character varying(600)");
 
                     b.Property<string>("Endpoint")
                         .IsRequired()
                         .HasMaxLength(400)
                         .HasColumnType("character varying(400)");
+
+                    b.Property<DateTime?>("LastSyncOnUtc")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
@@ -76,6 +86,8 @@ namespace FleetIQ.Integration.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(400)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Status");
 
                     b.ToTable("integrationconnectors", "integration");
                 });

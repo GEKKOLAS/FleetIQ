@@ -10,4 +10,13 @@ public sealed class PredictionRequestRepository(IntelligenceDbContext db) : IPre
 
     public Task<PredictionRequest?> GetByIdAsync(Guid id, CancellationToken ct) =>
         db.PredictionRequests.FirstOrDefaultAsync(x => x.Id == id, ct);
+
+    public async Task<IReadOnlyList<PredictionRequest>> ListRecentAsync(int take, CancellationToken ct)
+    {
+        take = take is < 1 or > 100 ? 20 : take;
+        return await db.PredictionRequests.AsNoTracking()
+            .OrderByDescending(p => p.CreatedOnUtc)
+            .Take(take)
+            .ToListAsync(ct);
+    }
 }

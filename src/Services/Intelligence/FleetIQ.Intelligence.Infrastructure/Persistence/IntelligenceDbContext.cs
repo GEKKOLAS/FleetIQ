@@ -20,9 +20,14 @@ public sealed class IntelligenceDbContext(DbContextOptions<IntelligenceDbContext
         var e = modelBuilder.Entity<PredictionRequest>();
         e.ToTable("predictionrequests");
         e.HasKey(x => x.Id);
+        e.Ignore(x => x.IsTransient);
         e.Property(x => x.Status).HasConversion<int>();
         e.Property(x => x.ModelId).HasMaxLength(400);
-        e.Property(x => x.PredictionType).HasMaxLength(400);
+        e.Property(x => x.PredictionType).HasMaxLength(20);
+        e.Property(x => x.ResultJson).HasMaxLength(4000);
+        e.Property(x => x.Confidence).HasPrecision(5, 4);
+        e.Property(x => x.Error).HasMaxLength(1000);
+        e.HasIndex(x => x.Status);
 
         var o = modelBuilder.Entity<OutboxMessage>();
         o.ToTable("outbox_messages");

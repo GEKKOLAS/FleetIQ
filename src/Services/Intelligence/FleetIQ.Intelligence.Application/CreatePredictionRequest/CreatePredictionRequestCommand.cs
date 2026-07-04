@@ -22,9 +22,11 @@ public sealed class CreatePredictionRequestCommandHandler(IPredictionRequestRepo
 {
     public async Task<Result<Guid>> Handle(CreatePredictionRequestCommand command, CancellationToken ct)
     {
-        var entity = PredictionRequest.Create(command.ModelId, command.PredictionType);
-        await repository.AddAsync(entity, ct);
+        var created = PredictionRequest.Create(command.ModelId, command.PredictionType);
+        if (created.IsFailure) return Result.Failure<Guid>(created.Error);
+
+        await repository.AddAsync(created.Value, ct);
         await unitOfWork.SaveChangesAsync(ct);
-        return Result.Success(entity.Id);
+        return Result.Success(created.Value.Id);
     }
 }

@@ -20,9 +20,12 @@ public sealed class IntegrationDbContext(DbContextOptions<IntegrationDbContext> 
         var e = modelBuilder.Entity<IntegrationConnector>();
         e.ToTable("integrationconnectors");
         e.HasKey(x => x.Id);
+        e.Ignore(x => x.IsTransient);
         e.Property(x => x.Status).HasConversion<int>();
         e.Property(x => x.SystemName).HasMaxLength(400);
         e.Property(x => x.Endpoint).HasMaxLength(400);
+        e.Property(x => x.DisabledReason).HasMaxLength(600);
+        e.HasIndex(x => x.Status);
 
         var o = modelBuilder.Entity<OutboxMessage>();
         o.ToTable("outbox_messages");

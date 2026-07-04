@@ -11,11 +11,16 @@ public static class SeedData
     {
         if (await db.PredictionRequests.AnyAsync()) return;
 
-        db.PredictionRequests.AddRange(
-            PredictionRequest.Create("ModelId 1", "PredictionType 1"),
-            PredictionRequest.Create("ModelId 2", "PredictionType 2"),
-            PredictionRequest.Create("ModelId 3", "PredictionType 3"));
+        var eta = PredictionRequest.Create("eta-v2", "Eta").Value;
+        eta.Start();
+        eta.Complete("""{"etaUtc":"2026-07-04T16:30:00Z","routeKm":412}""", 0.87m);
 
+        var delay = PredictionRequest.Create("delay-risk-v1", "Delay").Value;
+        delay.Start();
+
+        var price = PredictionRequest.Create("spot-price-v3", "Price").Value;
+
+        db.PredictionRequests.AddRange(eta, delay, price);
         await db.SaveChangesAsync();
     }
 }

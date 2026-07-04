@@ -59,6 +59,9 @@ namespace FleetIQ.Compliance.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime?>("CheckedOnUtc")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTime>("CreatedOnUtc")
                         .HasColumnType("timestamp with time zone");
 
@@ -78,9 +81,64 @@ namespace FleetIQ.Compliance.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("SubjectId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("SubjectType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("WaivedReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
                     b.HasKey("Id");
 
+                    b.HasIndex("Status");
+
+                    b.HasIndex("SubjectId");
+
                     b.ToTable("compliancechecks", "compliance");
+                });
+
+            modelBuilder.Entity("FleetIQ.Compliance.Domain.ComplianceCheck", b =>
+                {
+                    b.OwnsMany("FleetIQ.Compliance.Domain.ComplianceFinding", "Findings", b1 =>
+                        {
+                            b1.Property<Guid>("Id")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Code")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)");
+
+                            b1.Property<Guid>("ComplianceCheckId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Message")
+                                .IsRequired()
+                                .HasMaxLength(1000)
+                                .HasColumnType("character varying(1000)");
+
+                            b1.Property<DateTime>("RecordedOnUtc")
+                                .HasColumnType("timestamp with time zone");
+
+                            b1.Property<string>("Severity")
+                                .IsRequired()
+                                .HasMaxLength(10)
+                                .HasColumnType("character varying(10)");
+
+                            b1.HasKey("Id");
+
+                            b1.HasIndex("ComplianceCheckId");
+
+                            b1.ToTable("compliance_findings", "compliance");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ComplianceCheckId");
+                        });
+
+                    b.Navigation("Findings");
                 });
 #pragma warning restore 612, 618
         }
