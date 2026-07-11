@@ -1,85 +1,205 @@
-# FleetIQ — Backend Monorepo Scaffold
+<p align="center">
+  <img src="docs/images/hero-banner.png" alt="FleetIQ — domain-driven fleet and logistics platform" width="100%">
+</p>
 
-Microservices on **ASP.NET Core (.NET 10)** with **Domain-Driven Design** and **Clean Architecture**.
-This is the foundation skeleton every service clones from, plus a complete **Orders** reference service.
+<p align="center">
+  <img alt=".NET" src="https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white">
+  <img alt="Architecture" src="https://img.shields.io/badge/architecture-DDD%20%2B%20Clean%20Architecture-38bdf8">
+  <img alt="Services" src="https://img.shields.io/badge/bounded%20contexts-12-34d399">
+  <img alt="CI" src="https://github.com/GEKKOLAS/FleetIQ/actions/workflows/ci.yml/badge.svg">
+</p>
 
-## Why a monorepo
-One repository, one solution. You can refactor shared `BuildingBlocks` and service contracts in a single
-atomic commit, CI is one pipeline, and onboarding is "clone and run." Each service is still isolated
-(its own database, its own deployable API) so it can be extracted into its own repo later if a team takes
-sole ownership.
+## What FleetIQ is
 
-## Layout
+FleetIQ is a **backend platform for running a freight & logistics operation**: taking a customer
+order, matching it to a carrier and a load, tracking the shipment, billing it, and keeping the
+paperwork and compliance checks in order along the way.
+
+It's built as a **microservices monorepo** — 12 independent services, one per business capability,
+each owning its own database and publishing what happened as domain events instead of calling its
+neighbors directly. There's no shared "god database" and no service reaching into another's tables;
+every cross-service effect (e.g. *"an invoice was issued, so send a notification"*) travels through
+a transactional outbox and RabbitMQ.
+
+This repo is also meant to be **cloned from**: `Orders` and `Billing` are fully fleshed-out reference
+services (rich aggregates, child entities, state machines, paged queries), and every other service
+follows the same four-layer shape, so extending the system means copying a folder and modeling a new
+aggregate — not inventing new plumbing.
+
+## Architecture
+
+<p align="center">
+  <img src="docs/images/architecture.png" alt="FleetIQ service topology: Gateway, IdentityServer, 12 services, and the shared event backbone" width="100%">
+</p>
+
+- **Single entry point**: clients only ever talk to the **Gateway** (YARP), which validates the JWT
+  and routes by path prefix (`/orders` → Orders, `/carriers` → Carriers, etc).
+- **Defense in depth**: the Gateway validates the token, and each service validates it *again* —
+  a service is never reachable with an unauthenticated or forged token, even if someone bypasses
+  the gateway on the internal network.
+- **Auth**: **Duende IdentityServer** issues OAuth2/OIDC tokens (`client_credentials` for
+  service-to-service calls). All services validate tokens identically via a shared
+  `AddFleetIqJwtAuth()` extension.
+- **Database-per-service**: every service owns a private Postgres schema. Nothing reads another
+  service's tables directly.
+- **Event-driven integration**: a domain event is written to an `outbox_messages` table in the
+  *same transaction* as the aggregate change, then an `OutboxProcessor` publishes it to RabbitMQ
+  (via MassTransit) — reliable, exactly-once-ish delivery with no dual-write problem. Example:
+  `Billing` issues an invoice → publishes `InvoiceIssuedIntegrationEvent` → `Notifications`
+  consumes it and creates a notification, all without the two services knowing about each other's
+  internals.
+- **Clean Architecture dependency rule** inside every service:
+  `Api → Infrastructure → Application → Domain`. The Domain layer depends on nothing; Application
+  defines interfaces (e.g. `IOrderRepository`), Infrastructure implements them.
+- **CQRS without a mediator library**: hand-rolled `ICommand`/`IQuery` + handler contracts (no
+  MediatR, no license risk), backed by a `Result` type so domain rule violations are returned, not
+  thrown.
+
+## Services
+
+| # | Service | Aggregate | Route (via Gateway) | Port |
+|---|---------|-----------|----------------------|------|
+| 1 | Orders | `Order` | `/orders` | 5081 |
+| 2 | Identity | `UserAccount` | `/useraccounts` | 5082 |
+| 3 | Carriers | `Carrier` | `/carriers` | 5083 |
+| 4 | Planning | `Load` | `/loads` | 5084 |
+| 5 | Tracking | `Shipment` | `/shipments` | 5085 |
+| 6 | Billing | `Invoice` | `/invoices` | 5086 |
+| 7 | Documents | `Document` | `/documents` | 5087 |
+| 8 | Notifications | `Notification` | `/notifications` | 5088 |
+| 9 | Analytics | `ReportDefinition` | `/reportdefinitions` | 5089 |
+| 10 | Compliance | `ComplianceCheck` | `/compliancechecks` | 5090 |
+| 11 | Integration | `IntegrationConnector` | `/integrationconnectors` | 5091 |
+| 12 | Intelligence | `PredictionRequest` | `/predictionrequests` | 5092 |
+
+Plus **Gateway** (5080, entry point) and **IdentityServer** (5001, token endpoint).
+
+`Orders` and `Billing` are the fully-modeled exemplars (value objects, child entities, paged/filterable
+queries, state machines). `Carriers`, `Planning`, `Tracking` are similarly deepened. The remaining six
+(`Documents`, `Notifications`, `Analytics`, `Compliance`, `Integration`, `Intelligence`) each have a
+history/child-entity concept of their own (document versions, notification retries, report runs,
+compliance findings, connector health, prediction confidence) plus list endpoints and domain unit tests.
+
+## Tech stack
+
+| Concern | Choice |
+|---|---|
+| Runtime | ASP.NET Core on **.NET 10** |
+| Data access | EF Core (Npgsql) against **PostgreSQL + PostGIS** |
+| Messaging | **RabbitMQ** via MassTransit (transactional outbox pattern) |
+| Auth | **Duende IdentityServer** (OIDC/OAuth2) + JWT bearer validation |
+| Gateway | **YARP** reverse proxy |
+| Caching | Redis |
+| Object storage | MinIO (S3-compatible, for Documents) |
+| Observability | Serilog + OpenTelemetry (OTLP) + health checks |
+| Testing | xUnit domain unit tests per service |
+| CI | GitHub Actions — builds the solution and runs all tests on every push/PR |
+
+## Running it
+
+**Prerequisites**: [.NET 10 SDK](https://dotnet.microsoft.com/download), Docker Desktop.
+
+```bash
+cp .env.example .env
+docker compose up -d              # Postgres(+PostGIS), RabbitMQ, Redis, MinIO
+make init                         # generate FleetIQ.slnx project references
+dotnet build FleetIQ.slnx
+
+# schema migrations already exist in this repo; on first run each service applies
+# its own migration automatically (Development environment)
+dotnet dev-certs https --trust    # trust the local HTTPS dev cert, once
+
+# run the core + every service (Windows)
+./scripts/run-all.ps1
+# ...or just the core to start (IdentityServer + Gateway)
+./scripts/start-core.ps1
+```
+
+Front-end / API entry point: **http://localhost:5080**. Token endpoint:
+**https://localhost:5001/connect/token**.
+
+### Try it end-to-end
+
+```bash
+# 1. get a service token
+TOKEN=$(curl -ks -X POST https://localhost:5001/connect/token \
+  -d "grant_type=client_credentials&client_id=fleetiq.service&client_secret=REDACTED&scope=fleetiq.api" \
+  | grep -oE '"access_token":"[^"]+"' | cut -d'"' -f4)
+
+# 2. call a service THROUGH the gateway with the bearer token
+curl -X POST http://localhost:5080/carriers \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"legalName":"Acme Freight","registrationNumber":"PT12345","country":"PT"}'
+
+curl -X POST http://localhost:5080/orders \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d '{
+    "customerId": "11111111-1111-1111-1111-111111111111",
+    "pickup":   {"street":"1 Main St","city":"Lisbon","postalCode":"1000-001","country":"PT"},
+    "delivery": {"street":"5 Park Ave","city":"Porto","postalCode":"4000-002","country":"PT"},
+    "items":    [{"description":"Pallet","quantity":2,"weightKg":120}]
+  }'
+```
+
+This is exactly the flow captured below on a running instance of this repo — token issued by
+IdentityServer, both writes accepted by the Gateway, and the new order immediately visible in the
+paged list:
+
+<p align="center">
+  <img src="docs/images/live-demo.png" alt="Live end-to-end request flow through the running FleetIQ services" width="90%">
+</p>
+
+Prefer a GUI? Import [`FleetIQ.postman_collection.json`](FleetIQ.postman_collection.json) — run
+**"0 - Get Token"** first (it saves the bearer token for you), then any service folder. Every
+request goes through the Gateway, i.e. exactly the surface a front-end would use. Each service also
+publishes its raw OpenAPI document at `/openapi/v1.json`.
+
+### Adding the next service
+
+1. Copy `src/Services/Orders` → `src/Services/<NewService>`, rename namespaces/projects.
+2. Model the aggregate(s) in `*.Domain`.
+3. Add its database to `docker-compose.yml` / `scripts/postgres-init`.
+4. Re-run `make init` (or `dotnet sln add` the new projects).
+
+## Testing
+
+```bash
+dotnet test FleetIQ.slnx
+```
+
+Runs the xUnit domain unit-test suite for every service (lifecycle rules, invariants, state
+transitions). CI runs the same command on every push and pull request.
+
+## Repository layout
+
 ```
 fleetiq/
   docker-compose.yml            # Postgres(+PostGIS) · RabbitMQ · Redis · MinIO
   Directory.Packages.props      # central NuGet versions
   src/
-    BuildingBlocks/             # shared, reused by every service
-      *.Domain                  # Entity, AggregateRoot, ValueObject, Result, IDomainEvent
-      *.Application             # ICommand/IQuery + handler contracts, IUnitOfWork
-      *.Infrastructure          # transactional Outbox + MassTransit publisher
+    BuildingBlocks/             # shared Domain/Application/Infrastructure/Web building blocks
+    Contracts/                  # shared integration-event contracts (published/consumed via the bus)
+    IdentityServer/             # Duende IdentityServer — issues tokens
+    Gateway/                    # YARP reverse proxy — single entry point
     Services/
-      Orders/                   # reference service — copy this for the next context
+      Orders/                   # reference service — copy this for the next bounded context
         *.Domain                # Order aggregate, value objects, domain events
-        *.Application           # CreateOrder command, GetOrder query, validators
-        *.Infrastructure        # EF Core (Npgsql), repository, DbContext, DI
+        *.Application           # commands/queries, validators
+        *.Infrastructure        # EF Core (Npgsql), repository, DbContext, outbox
         *.Api                   # Minimal API endpoints, health, OpenAPI, OTel
+      Carriers/ Planning/ Tracking/ Billing/ Documents/ Notifications/
+      Analytics/ Compliance/ Integration/ Intelligence/ Identity/
   tests/
-    FleetIQ.Orders.UnitTests    # xUnit domain tests
+    FleetIQ.<Service>.UnitTests # xUnit domain tests, one project per service
 ```
 
-## Dependency rule (Clean Architecture)
-`Api -> Infrastructure -> Application -> Domain`. Domain depends on nothing.
-Application defines interfaces (e.g. `IOrderRepository`); Infrastructure implements them.
+## Notable design decisions
 
-## Getting started
-```bash
-cp .env.example .env
-make up                 # start Postgres, RabbitMQ, Redis, MinIO
-make init               # create FleetIQ.sln and add all projects
+- **No MediatR / AutoMapper** — both went commercial in 2025 (free under $5M revenue). This scaffold
+  uses a hand-rolled mediator and maps DTOs by hand instead.
+- **MassTransit v8** (Apache-2.0) is used for the bus; v9 goes commercial above ~$1M revenue.
+  [Wolverine](https://wolverinefx.net/) (MIT) is the drop-in alternative if that matters to you.
+- **Duende IdentityServer** is free under a $1M revenue threshold; [OpenIddict](https://github.com/openiddict)
+  is the free fallback if you outgrow that.
 
-# create the first EF migration for Orders, then run the API
-dotnet tool install --global dotnet-ef
-dotnet ef migrations add InitialCreate \
-  --project src/Services/Orders/FleetIQ.Orders.Infrastructure \
-  --startup-project src/Services/Orders/FleetIQ.Orders.Api
-
-make run-orders         # https://localhost:xxxx/openapi  ·  /health
-make test
-```
-
-## Try the API
-```bash
-curl -X POST http://localhost:5080/orders -H "Content-Type: application/json" -d '{
-  "customerId": "11111111-1111-1111-1111-111111111111",
-  "pickup":   {"street":"1 Main St","city":"Lisbon","postalCode":"1000-001","country":"PT"},
-  "delivery": {"street":"5 Park Ave","city":"Porto","postalCode":"4000-002","country":"PT"},
-  "items":    [{"description":"Pallet","quantity":2,"weightKg":120}]
-}'
-```
-
-## Adding the next service (e.g. Carriers)
-1. Copy `src/Services/Orders` -> `src/Services/Carriers`, rename namespaces/projects.
-2. Model the aggregate(s) in `*.Domain` (see the Architecture Map for each context's building blocks).
-3. Add its database to `docker-compose.yml` and a connection string.
-4. `dotnet sln add` the new projects (or re-run `make init`).
-
-## Patterns already wired
-- **CQRS** via dependency-free `ICommand/IQuery` handlers (no MediatR -> no license risk).
-- **Transactional Outbox**: domain events are saved in the same transaction as the aggregate and
-  published to RabbitMQ by `OutboxProcessor<TContext>` — reliable, exactly-once-ish event publishing.
-- **Result type** so the domain returns rule violations instead of throwing.
-- **Observability**: Serilog + OpenTelemetry (OTLP) + health checks out of the box.
-
-## Library licensing notes (verified June 2026)
-- **MassTransit v8** (used here) is free under Apache-2.0 but loses support at end of 2026.
-  v9 (2026) is commercial above ~$1M revenue. Alternative: **Wolverine** (MIT) replaces both the
-  mediator and the bus.
-- **MediatR / AutoMapper** went commercial in 2025 (free under $5M). This scaffold avoids both:
-  a hand-rolled mediator and no object-mapper (map by hand or add **Mapperly**, source-generated, MIT).
-- **Duende IdentityServer** (added with the Identity service later) is free under $1M revenue;
-  **OpenIddict** is the free fallback.
-
-> Package versions in `Directory.Packages.props` are pinned to plausible .NET 10 releases — run
-> `dotnet restore` and bump to the latest patch as needed.
+See [`FOUNDATION.md`](FOUNDATION.md) and [`SERVICES.md`](SERVICES.md) for more detail on the edge/auth
+layer and the current state of each bounded context.
