@@ -10,3 +10,15 @@
     background: transparent;
     border: none;
 }
+
+/* Shared operations shell: keep the public landing page's own visual language. */
+.layout-wrapper {
+    font-family: 'Lato', system-ui, sans-serif;
+    .layout-topbar { border-bottom: 1px solid var(--surface-border); }
+    .layout-topbar-logo { font-weight: 800; letter-spacing: -.8px; }
+    .layout-sidebar { border: 1px solid var(--surface-border); box-shadow: 0 8px 30px #132d4210; border-radius: 16px; }
+    .layout-menu .layout-menuitem-root-text { font-size: 9px; letter-spacing: 1.8px; color: var(--text-color-secondary); padding: 12px 0 6px; }
+    .layout-menu a { border-radius: 8px; font-size: 12px; }
+    .layout-menu a.active-route { background: color-mix(in srgb, var(--primary-color) 9%, transparent); }
+    .card { border: 1px solid var(--surface-border); border-radius: 14px; box-shadow: 0 3px 16px #132d4205; }
+}

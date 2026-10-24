@@ -1,6 +1,7 @@
 import { Component, OnInit, effect, inject } from '@angular/core';
 import { forkJoin } from 'rxjs';
 import { ChartModule } from 'primeng/chart';
+import { RouterLink } from '@angular/router';
 import { BillingService } from '../../core/billing.service';
 import { OrdersService } from '../../core/orders.service';
 import { PlanningService } from '../../core/planning.service';
@@ -86,8 +87,11 @@ const donutCenterPlugin = {
 @Component({
     selector: 'app-dashboard',
     standalone: true,
-    imports: [ChartModule],
+    imports: [ChartModule, RouterLink],
+    styleUrl: './dashboard.scss',
     template: `
+        <header class="dashboard-intro"><div><span>FLEETIQ / OPERATIONS OVERVIEW</span><h1>Tu operación, conectada.</h1><p>Planifica con claridad. Mueve tu flota con confianza.</p></div><a routerLink="/app/planning"><i aria-hidden="true" class="pi pi-sitemap"></i> Planificar operación <i aria-hidden="true" class="pi pi-arrow-up-right"></i></a></header>
+        <section class="network-banner"><div class="banner-copy"><span class="banner-eyebrow"><i aria-hidden="true" class="pi pi-globe"></i> CONTROL TOWER</span><h2>Una nueva perspectiva<br/>de tu red logística.</h2><p>Explora tus envíos, centros de distribución y rutas<br class="desktop-break"/> en una vista 3D interactiva.</p><a routerLink="/app/tracking">Explorar live tracking <i aria-hidden="true" class="pi pi-arrow-right"></i></a></div><img src="media/logistics-network.svg" alt="Ilustración isométrica de una red de almacenes y transporte" width="500" height="280" /></section>
         <div class="grid grid-cols-12 gap-6">
             @for (k of kpis; track k.label) {
                 <div class="col-span-12 xl:col-span-3 md:col-span-6">
@@ -98,7 +102,7 @@ const donutCenterPlugin = {
                                 <div class="text-surface-900 dark:text-surface-0 font-medium text-2xl" style="font-variant-numeric: tabular-nums">{{ k.value }}</div>
                             </div>
                             <div class="flex items-center justify-center rounded-border" [style]="'width:2.5rem;height:2.5rem;background:' + k.color + '22'">
-                                <i [class]="'pi ' + k.icon" [style]="'color:' + k.color"></i>
+                                <i aria-hidden="true" [class]="'pi ' + k.icon" [style]="'color:' + k.color"></i>
                             </div>
                         </div>
                         @if (k.sub) {

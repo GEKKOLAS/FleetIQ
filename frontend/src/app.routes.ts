@@ -15,7 +15,6 @@ import { Notfound } from './app/pages/notfound/notfound';
 import { Notifications } from './app/pages/notifications/notifications';
 import { Orders } from './app/pages/orders/orders';
 import { Planning } from './app/pages/planning/planning';
-import { Tracking } from './app/pages/tracking/tracking';
 
 export const appRoutes: Routes = [
     { path: '', component: Landing },
@@ -30,7 +29,7 @@ export const appRoutes: Routes = [
             { path: 'orders', component: Orders },
             { path: 'carriers', component: Carriers },
             { path: 'planning', component: Planning },
-            { path: 'tracking', component: Tracking },
+            { path: 'tracking', loadComponent: () => import('./app/pages/tracking/tracking').then(m => m.Tracking) },
             { path: 'billing', component: Billing },
             { path: 'documents', component: Documents },
             { path: 'notifications', component: Notifications },

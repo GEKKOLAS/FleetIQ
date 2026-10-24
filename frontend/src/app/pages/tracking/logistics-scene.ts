@@ -12,7 +12,7 @@ export type RouteCoordinates = Record<string, [number, number][]>;
     template: `<div #host class="scene-host" role="img" aria-label="Vista 3D esquemática de envíos. Arrastra para rotar y usa la rueda para ampliar."></div>
         @if (failed) { <div class="fallback">La vista 3D no está disponible en este dispositivo. Usa el mapa de calles.</div> }
         <div class="scene-note">{{ shipments.length ? 'Coordenadas reales · escala esquemática' : 'Vista de muestra · sin telemetría' }}<br/><span>Arrastra para rotar · rueda para ampliar</span></div>
-        <button class="reset" type="button" (click)="reset()" aria-label="Restablecer cámara 3D"><i class="pi pi-compass"></i></button>`,
+        <button class="reset" type="button" (click)="reset()" aria-label="Restablecer cámara 3D"><i aria-hidden="true" class="pi pi-compass"></i></button>`,
     styles: [`:host{display:block;position:relative;height:100%;min-height:480px;background:#0b1b29}.scene-host{position:absolute;inset:0}.scene-note{position:absolute;bottom:22px;left:24px;color:#b8cddc;font-size:11px;line-height:1.9;pointer-events:none}.scene-note span{color:#809bae}.reset{position:absolute;bottom:26px;right:22px;border:1px solid #405b70;background:#163044;color:#ddf6ef;border-radius:10px;width:38px;height:38px;cursor:pointer}.fallback{position:absolute;inset:35% 15%;text-align:center;color:#d4e5ef}`]
 })
 export class LogisticsScene implements AfterViewInit, OnChanges, OnDestroy {
@@ -79,14 +79,16 @@ export class LogisticsScene implements AfterViewInit, OnChanges, OnDestroy {
 
     ngOnChanges() { if (this.renderer && !this.failed) this.rebuild(); }
 
-    reset() { this.camera.position.set(38, 40, 48); this.controls?.target.set(0, 0, 0); this.controls?.update(); }
+    reset() { this.camera.position.set(38, 40, 48).multiplyScalar(Math.max(1, .95 / this.camera.aspect)); this.controls?.target.set(0, 0, 0); this.controls?.update(); }
 
     private resize() {
         const { clientWidth: width, clientHeight: height } = this.host.nativeElement;
         if (!width || !height || !this.renderer) return;
+        const changedAspect = Math.abs(this.camera.aspect - width / height) > .01;
         this.camera.aspect = width / height;
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(width, height);
+        if (changedAspect) this.reset();
     }
 
     private rebuild() {
@@ -99,11 +101,11 @@ export class LogisticsScene implements AfterViewInit, OnChanges, OnDestroy {
             }
             points.push(...(this.routes[s.id] ?? []));
         }
-        const latitudes = points.map(p => p[0]), longitudes = points.map(p => p[1]);
-        const midLat = points.length ? (Math.min(...latitudes) + Math.max(...latitudes)) / 2 : 0;
-        const midLng = points.length ? (Math.min(...longitudes) + Math.max(...longitudes)) / 2 : 0;
+        const bounds = points.reduce((b, p) => ({ minLat: Math.min(b.minLat, p[0]), maxLat: Math.max(b.maxLat, p[0]), minLng: Math.min(b.minLng, p[1]), maxLng: Math.max(b.maxLng, p[1]) }), { minLat: Infinity, maxLat: -Infinity, minLng: Infinity, maxLng: -Infinity });
+        const midLat = points.length ? (bounds.minLat + bounds.maxLat) / 2 : 0;
+        const midLng = points.length ? (bounds.minLng + bounds.maxLng) / 2 : 0;
         const cos = Math.max(.1, Math.cos(midLat * Math.PI / 180));
-        const span = points.length ? Math.max((Math.max(...latitudes) - Math.min(...latitudes)), (Math.max(...longitudes) - Math.min(...longitudes)) * cos, .02) : 1;
+        const span = points.length ? Math.max(bounds.maxLat - bounds.minLat, (bounds.maxLng - bounds.minLng) * cos, .02) : 1;
         const project = (lat: number, lng: number, y = .05) => new THREE.Vector3((lng - midLng) * cos / span * 36, y, -(lat - midLat) / span * 36);
         if (!this.shipments.length) {
             const hub = createWarehouse(); hub.position.set(-9, 0, -5); this.content.add(hub);
@@ -111,6 +113,7 @@ export class LogisticsScene implements AfterViewInit, OnChanges, OnDestroy {
             const other = createWarehouse('#6c9bdf'); other.position.set(11, 0, 8); this.content.add(other);
             this.line([new THREE.Vector3(-9, .05, -3), new THREE.Vector3(-9, .05, 3), new THREE.Vector3(11, .05, 3), new THREE.Vector3(11, .05, 7)], '#36cbb0', true);
         }
+        const hubs = new Set<string>();
         for (const s of this.shipments) {
             const color = s.id === this.selectedId ? '#64f6cf' : '#5f94ba';
             const coords = this.routes[s.id];
@@ -119,7 +122,8 @@ export class LogisticsScene implements AfterViewInit, OnChanges, OnDestroy {
                 this.line([project(s.originLatitude!, s.originLongitude!), project(s.destinationLatitude!, s.destinationLongitude!)], color, true);
             }
             for (const [lat, lng] of [[s.originLatitude, s.originLongitude], [s.destinationLatitude, s.destinationLongitude]]) {
-                if (this.valid([lat, lng])) { const hub = createWarehouse(color); hub.scale.setScalar(.65); hub.position.copy(project(lat!, lng!)); this.content.add(hub); }
+                const key = `${lat},${lng}`;
+                if (this.valid([lat, lng]) && !hubs.has(key)) { hubs.add(key); const hub = createWarehouse(color); hub.scale.setScalar(.65); hub.position.copy(project(lat!, lng!)); this.content.add(hub); }
             }
             if (this.valid([s.currentLatitude, s.currentLongitude])) {
                 const truck = createTruck(color);
@@ -137,6 +141,8 @@ export class LogisticsScene implements AfterViewInit, OnChanges, OnDestroy {
     private valid(p: (number | null | undefined)[]): boolean { return p.length === 2 && p.every(v => v != null && Number.isFinite(v)) && Math.abs(p[0]!) <= 90 && Math.abs(p[1]!) <= 180; }
 
     private line(points: THREE.Vector3[], color: string, dashed: boolean) {
+        // Raise routes above the receiving surface to avoid depth flicker.
+        points.forEach(point => point.y = .15);
         const material = dashed ? new THREE.LineDashedMaterial({ color, dashSize: .5, gapSize: .3 }) : new THREE.LineBasicMaterial({ color });
         const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), material);
         line.computeLineDistances(); this.content.add(line);
