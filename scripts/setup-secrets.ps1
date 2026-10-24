@@ -22,10 +22,10 @@ foreach ($line in Get-Content .env) {
 
 $secretKeys = 'POSTGRES_PASSWORD', 'RABBITMQ_DEFAULT_PASS', 'MINIO_ROOT_PASSWORD',
               'FLEETIQ_SERVICE_CLIENT_SECRET', 'FLEETIQ_DEMO_USER_PASSWORD'
-$leaked = 'REDACTED', 'REDACTED', 'REDACTED'   # values that were once committed - never reuse
 $oldPostgres = $envMap['POSTGRES_PASSWORD']
 foreach ($k in $secretKeys) {
-    if ($Rotate -or -not $envMap[$k] -or $leaked -contains $envMap[$k]) {
+    # short values are treated as weak placeholders and replaced
+    if ($Rotate -or -not $envMap[$k] -or $envMap[$k].Length -lt 16) {
         $envMap[$k] = New-Secret $(if ($k -eq 'FLEETIQ_DEMO_USER_PASSWORD') { 16 } else { 32 })
     }
 }
