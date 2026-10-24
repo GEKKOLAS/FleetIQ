@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>FleetIQ · Almacén interactivo</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;color:#e7f1f4;font:13px/1.45 Inter,system-ui,sans-serif}button,summary{font:inherit}button{cursor:pointer}button:focus-visible,summary:focus-visible{outline:2px solid #8bf5d9;outline-offset:4px}button:disabled{cursor:wait;opacity:.55}.heading{position:fixed;top:20px;left:20px;max-width:310px}.brand{color:#8bf5d9;letter-spacing:.19em;font-size:11px;font-weight:750}.heading h1{margin:5px 0 8px;font-size:24px;line-height:1.15;letter-spacing:-.04em;font-weight:650}.demo{display:inline-block;padding:5px 9px;color:#b6d6d9;background:#102a3ae8;border:1px solid #2d4c5a;border-radius:20px;font-size:10px;letter-spacing:.02em}.info{position:fixed;right:20px;top:20px;width:265px;padding:12px 14px;border:1px solid #365363;border-radius:13px;background:#102838f2;box-shadow:0 12px 32px #04111c35}.info summary{display:flex;align-items:center;gap:9px;cursor:pointer;list-style:none}.info summary::-webkit-details-marker{display:none}.step-num{display:grid;place-items:center;flex:none;width:29px;height:29px;border:1px solid #3c7b77;border-radius:8px;color:#8bf5d9;font:12px ui-monospace,monospace}.info summary strong{display:block;font-size:13px}.info summary small{display:block;color:#8caeba;font-size:10px}.chevron{margin-left:auto;color:#8bf5d9}.info[open] .chevron{transform:rotate(180deg)}.info p{margin:12px 0;color:#c6dce4;font-size:12px}.state{padding:8px 9px;border:1px solid #305c61;border-radius:7px;background:#173c43;color:#9ae6d3;font:10px/1.6 ui-monospace,monospace;overflow-wrap:anywhere}.info ul{padding-left:16px;margin:11px 0 4px;color:#a8c4d0;font-size:11px}.info li+li{margin-top:5px}.footnote{margin-top:11px!important;font-size:10px!important;color:#789bab!important}.dock{position:fixed;left:20px;right:20px;bottom:20px;max-width:740px;margin:0 auto;padding:12px;border:1px solid #365363;border-radius:15px;background:#102838f5;box-shadow:0 16px 45px #03111f55}.stages{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}.stage{min-height:50px;display:flex;gap:6px;align-items:center;justify-content:center;flex-wrap:wrap;padding:7px 5px;border:1px solid #2b4859;border-radius:8px;background:#173244;color:#a7c1cd;text-align:center;line-height:1.15}.stage .n{color:#78a0af;font:10px ui-monospace,monospace}.stage .label{font-size:11px}.stage[aria-pressed=true]{background:#174c49;border-color:#55cdb6;color:#c5ffed}.stage[aria-pressed=true] .n{color:#91f3d6}.progress{height:3px;margin:11px 1px;background:#294554;border-radius:4px;overflow:hidden}.progress span{display:block;width:0;height:100%;background:#65ddbe;transition:width .12s linear}.actions{display:flex;gap:7px;align-items:center}.action{border:1px solid #365565;border-radius:7px;padding:7px 10px;background:#193848;color:#c8dce5;font-size:11px}.primary{background:#74e1c0;border-color:#74e1c0;color:#102c36;font-weight:700}.action[aria-pressed=true]{border-color:#74e1c0;color:#a3f2d8}.time{margin-left:auto;color:#7299a9;font:10px ui-monospace,monospace;white-space:nowrap}.status{margin:8px 2px 0;color:#84a7b7;font-size:10px;min-height:15px}.status.error{color:#ffc59a}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+    @media(max-width:760px){.heading{left:14px;top:14px;max-width:260px}.heading h1{font-size:21px}.info{left:14px;right:14px;top:104px;width:auto;padding:9px 11px}.info[open]{max-height:calc(100vh - 330px);overflow:auto}.dock{left:10px;right:10px;bottom:10px;padding:10px}.stage{min-height:48px;gap:3px;padding:6px 3px;flex-direction:column}.stage .label{font-size:10px}.action{padding:7px 8px;font-size:10px}.time{font-size:9px}.status{font-size:9px}.footnote{font-size:9px!important}}
+    @media(max-width:480px){.stages{display:flex;overflow-x:auto;scrollbar-width:thin;padding-bottom:3px}.stage{flex:0 0 95px;min-height:42px;flex-direction:row;gap:5px}.stage .label{font-size:10px}}
+    @media(max-width:380px){.action{padding:7px 6px}.time{display:none}.stages{gap:4px}.heading h1{font-size:20px}}
+    @media(prefers-reduced-motion:reduce){.progress span{transition:none}}
+  </style>
+</head>
+<body>
+  <header class="heading" data-spline-passthrough>
+    <div class="brand">FLEETIQ / OPERACIONES</div>
+    <h1>Del pedido a la entrega.</h1>
+    <span class="demo">Demostración · sin telemetría</span>
+  </header>
+  <details class="info" id="info">
+    <summary><span class="step-num" id="stepNum">01</span><span><strong id="stepTitle">Pedidos</strong><small>Explorar esta etapa</small></span><span class="chevron" aria-hidden="true">⌄</span></summary>
+    <p id="description">Un pedido reúne cliente, recogida, destino y artículos. Se confirma antes de prepararlo para planificación.</p>
+    <div class="state" id="states">Draft → Confirmed → ReadyForPlanning</div>
+    <ul id="requirements"><li>Cada artículo indica cantidad y peso.</li><li>Preparar un pedido no crea una carga automáticamente.</li></ul>
+    <p class="footnote">El almacén representa el proceso de transporte. Las posiciones y los bultos son ilustrativos.</p>
+  </details>
+  <section class="dock" aria-label="Explorar el proceso logístico">
+    <nav class="stages" aria-label="Etapas del proceso">
+      <button class="stage" data-stage="0" aria-pressed="true" disabled><span class="n">01</span><span class="label">Pedidos</span></button>
+      <button class="stage" data-stage="1" aria-pressed="false" disabled><span class="n">02</span><span class="label">Consolidación</span></button>
+      <button class="stage" data-stage="2" aria-pressed="false" disabled><span class="n">03</span><span class="label">Planificación</span></button>
+      <button class="stage" data-stage="3" aria-pressed="false" disabled><span class="n">04</span><span class="label">Despacho</span></button>
+      <button class="stage" data-stage="4" aria-pressed="false" disabled><span class="n">05</span><span class="label">Entrega</span></button>
+    </nav>
+    <div class="progress" role="progressbar" aria-label="Recorrido de demostración" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress"><span id="progressFill"></span></div>
+    <div class="actions">
+      <button class="action primary" id="play" disabled>▶ Recorrer proceso</button>
+      <button class="action" id="reset" disabled>Reiniciar</button>
+      <button class="action" id="roof" aria-pressed="false" disabled>Mostrar techo</button>
+      <span class="time" id="time">00 / 24 s</span>
+    </div>
+    <p class="status" id="status" role="status">Preparando el almacén interactivo…</p>
+  </section>
+  <script>
+  (async () => {
+    'use strict';
+    const DURATION = 24;
+    const STAGE_SECONDS = DURATION / 5;
+    const stages = [
+      { title: 'Pedidos', description: 'Un pedido reúne cliente, recogida, destino y artículos. Se confirma antes de prepararlo para planificación.', states: 'Draft → Confirmed → ReadyForPlanning', requirements: ['Cada artículo indica cantidad y peso.', 'Preparar un pedido no crea una carga automáticamente.'] },
+      { title: 'Consolidación', description: 'Los pedidos se agrupan en una carga. La operación mantiene sus referencias y calcula el peso total.', states: 'Carga: Draft', requirements: ['Una carga reúne uno o más pedidos.', 'La carga conserva origen, destino y peso total.'] },
+      { title: 'Planificación', description: 'La carga se prepara para viajar con un transportista verificado y una ruta finalizada.', states: 'Carga: Draft → Planned · Ruta: Finalized', requirements: ['Transportista con estado Verified.', 'Ruta con al menos dos paradas de recogida o entrega.', 'La carga contiene al menos un pedido.'] },
+      { title: 'Despacho', description: 'Confirmar la carga inicia su seguimiento: se crea un envío y se despacha automáticamente.', states: 'Carga: Confirmed · Envío: Created → Dispatched', requirements: ['La carga debe estar planificada.', 'La confirmación comunica el despacho al seguimiento.'] },
+      { title: 'Seguimiento y entrega', description: 'El primer reporte GPS pone el envío en tránsito. La entrega registra quién recibe y cuándo.', states: 'Dispatched → InTransit → Delivered', requirements: ['La ubicación corresponde al último reporte recibido.', 'Las incidencias se registran como eventos.', 'La entrega conserva receptor y fecha.'] }
+    ];
+    const $ = id => document.getElementById(id);
+    const ui = { buttons: Array.from(document.querySelectorAll('[data-stage]')), play: $('play'), roof: $('roof'), reset: $('reset'), status: $('status'), fill: $('progressFill'), progress: $('progress'), time: $('time') };
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const state = { ready: false, running: false, elapsed: 0, stage: 0, roofVisible: false, error: null };
+    let origin = 0;
+    let renderedTime = -1;
+    let lastStatusTime = -1;
+    let raf = 0;
+    let disposed = false;
+    let inFlight = false;
+    let zoneObjects = [];
+    let cargo, truck, roof, shutter;
+    let clickListener;
+    const clamp = x => Math.max(0, Math.min(1, x));
+    const ease = x => 0.5 - Math.cos(Math.PI * clamp(x)) / 2;
+    const at = (t, start, length) => ease((t - start) / length);
+    const copy = o => ({ id: o.id, name: o.name, position: { ...o.position }, rotation: { ...o.rotation }, scale: { ...o.scale }, visible: o.visible });
+    function fail(error) {
+      state.running = false;
+      state.error = error instanceof Error ? error.message : String(error);
+      ui.status.classList.add('error');
+      ui.status.textContent = 'No se pudo preparar el modelo: ' + state.error;
+      ui.play.disabled = true;
+      console.error('FleetIQ warehouse:', state.error);
+    }
+    function notice(text) { if (!state.error) ui.status.textContent = text; }
+    function updateStage(index) {
+      state.stage = index;
+      const stage = stages[index];
+      $('stepNum').textContent = String(index + 1).padStart(2, '0');
+      $('stepTitle').textContent = stage.title;
+      $('description').textContent = stage.description;
+      $('states').textContent = stage.states;
+      $('requirements').replaceChildren(...stage.requirements.map(text => {
+        const li = document.createElement('li'); li.textContent = text; return li;
+      }));
+      ui.buttons.forEach((button, i) => button.setAttribute('aria-pressed', String(i === index)));
+      const selected = ui.buttons[index];
+      if (selected && selected.parentElement.scrollWidth > selected.parentElement.clientWidth) selected.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'auto' });
+    }
+    async function highlight(index) {
+      await Promise.all(zoneObjects.flatMap((zone, i) => [
+        spline.updateObject(zone.pad.id, { material: { color: i === index ? '#377d76' : zone.baseColor } }),
+        spline.updateObject(zone.target.id, { material: { color: i === index ? '#c1ffe9' : '#64f6cf' } })
+      ]));
+    }
+    function setRunning(value) {
+      state.running = value;
+      ui.play.textContent = value ? 'Ⅱ Pausar' : state.elapsed >= DURATION ? '↻ Repetir proceso' : '▶ Recorrer proceso';
+      ui.play.setAttribute('aria-pressed', String(value));
+    }
+    function elapsedAt(now) { return state.running ? Math.min(DURATION, (now - origin) / 1000) : state.elapsed; }
+    async function renderPose(seconds) {
+      const consolidate = at(seconds, 4.8, 3.8);
+      const dispatch = at(seconds, 14.4, 3.7);
+      const travel = at(seconds, 19.2, 4.5);
+      const cargoPosition = {
+        x: cargo.position.x + 495 * consolidate + 510 * dispatch,
+        y: cargo.position.y,
+        z: cargo.position.z + 330 * dispatch
+      };
+      await Promise.all([
+        spline.updateObject(cargo.id, { position: cargoPosition, visible: seconds < 19.2 }),
+        spline.updateObject(truck.id, { position: { ...truck.position, z: truck.position.z + 240 * travel } }),
+        spline.updateObject(shutter.id, { position: { ...shutter.position, y: shutter.position.y + 70 * at(seconds, 13.6, 1.2) } })
+      ]);
+      renderedTime = seconds;
+    }
+    function progress(seconds) {
+      const percent = Math.round(seconds / DURATION * 100);
+      ui.fill.style.width = percent + '%';
+      ui.progress.setAttribute('aria-valuenow', String(percent));
+      ui.time.textContent = String(Math.floor(seconds)).padStart(2, '0') + ' / 24 s';
+    }
+    async function frame(now) {
+      if (disposed) return;
+      if (inFlight) { raf = requestAnimationFrame(frame); return; }
+      inFlight = true;
+      try {
+        const seconds = elapsedAt(now);
+        const index = Math.min(4, Math.floor(seconds / STAGE_SECONDS));
+        if (index !== state.stage) { updateStage(index); await highlight(index); }
+        if (seconds !== renderedTime) await renderPose(seconds);
+        if (now - lastStatusTime >= 100) { progress(seconds); lastStatusTime = now; }
+        if (state.running && seconds >= DURATION) {
+          state.elapsed = DURATION;
+          setRunning(false);
+          progress(DURATION);
+          notice('Demostración completada · entrega registrada. Puedes repetir o explorar una etapa.');
+        }
+      } catch (error) { fail(error); }
+      finally { inFlight = false; }
+      if (!state.error) raf = requestAnimationFrame(frame);
+    }
+    function pause() {
+      if (!state.ready || state.error) return false;
+      state.elapsed = elapsedAt(performance.now());
+      setRunning(false);
+      notice('En pausa · selecciona una etapa o continúa el recorrido.');
+      return true;
+    }
+    function play() {
+      if (!state.ready || state.error) return false;
+      if (reduced) { notice('Movimiento reducido activo · selecciona las etapas para explorar.'); return false; }
+      if (state.running) return true;
+      if (state.elapsed >= DURATION) state.elapsed = 0;
+      origin = performance.now() - state.elapsed * 1000;
+      setRunning(true);
+      notice('Simulación en curso · sin cambios en los envíos de tu operación.');
+      return true;
+    }
+    async function selectStage(index) {
+      index = Number(index);
+      if (!state.ready || state.error || !Number.isInteger(index) || index < 0 || index > 4) return false;
+      pause();
+      state.elapsed = index * STAGE_SECONDS;
+      updateStage(index);
+      await highlight(index);
+      renderedTime = -1;
+      progress(state.elapsed);
+      notice('Etapa ' + (index + 1) + ' · ' + stages[index].title + '. Arrastra el modelo para orbitar.');
+      return true;
+    }
+    async function reset() {
+      if (!state.ready || state.error) return false;
+      pause();
+      state.elapsed = 0;
+      state.roofVisible = false;
+      ui.roof.textContent = 'Mostrar techo';
+      ui.roof.setAttribute('aria-pressed', 'false');
+      await spline.updateObject(roof.id, { visible: false });
+      updateStage(0);
+      await highlight(0);
+      renderedTime = -1;
+      progress(0);
+      notice(reduced ? 'Movimiento reducido activo · selecciona una etapa para explorar.' : 'Selecciona una zona o recorre el proceso · arrastra para orbitar.');
+      return true;
+    }
+    async function toggleRoof() {
+      if (!state.ready || state.error) return false;
+      const visible = !state.roofVisible;
+      await spline.updateObject(roof.id, { visible });
+      state.roofVisible = visible;
+      ui.roof.textContent = visible ? 'Ocultar techo' : 'Mostrar techo';
+      ui.roof.setAttribute('aria-pressed', String(visible));
+      return visible;
+    }
+    window.fleetiqDemo = { play, pause, reset, selectStage, toggleRoof, getState: () => ({ ...state, elapsed: state.ready ? elapsedAt(performance.now()) : 0, reducedMotion: reduced }) };
+    if (window.matchMedia('(min-width: 1000px)').matches) $('info').open = true;
+    try {
+      await spline.ready;
+      const names = ['Demo Cargo', 'FleetIQ Delivery Truck', 'Warehouse Roof', 'Dock Shutter', ...Array.from({ length: 5 }, (_, i) => ['Zone ' + (i + 1) + ' Pad', 'Zone ' + (i + 1) + ' Target']).flat()];
+      const snapshots = await Promise.all(names.map(name => spline.findObjectByName(name)));
+      const missing = names.filter((name, i) => !snapshots[i]);
+      if (missing.length) throw new Error('Objeto no disponible: ' + missing.join(', '));
+      [cargo, truck, roof, shutter] = snapshots.slice(0, 4).map(copy);
+      const baseColors = ['#27566a', '#285b61', '#334e70', '#326b65', '#233f59'];
+      zoneObjects = Array.from({ length: 5 }, (_, i) => ({ pad: copy(snapshots[4 + i * 2]), target: copy(snapshots[5 + i * 2]), baseColor: baseColors[i] }));
+      state.ready = true;
+      ui.buttons.forEach(button => { button.disabled = false; button.addEventListener('click', () => selectStage(button.dataset.stage).catch(fail)); });
+      ui.play.disabled = false;
+      ui.roof.disabled = false;
+      ui.reset.disabled = false;
+      ui.play.addEventListener('click', () => state.running ? pause() : play());
+      ui.roof.addEventListener('click', () => toggleRoof().catch(fail));
+      ui.reset.addEventListener('click', () => reset().catch(fail));
+      clickListener = event => {
+        const name = event && event.target && event.target.name || '';
+        const match = /^Zone ([1-5]) /.exec(name) || /^Process Zone ([1-5])$/.exec(name);
+        if (match) selectStage(Number(match[1]) - 1).catch(fail);
+        else if (name === 'FleetIQ Delivery Truck' || name.startsWith('Delivery Truck ')) selectStage(4).catch(fail);
+      };
+      await spline.addEventListener('mouseDown', clickListener);
+      await reset();
+      console.log('FleetIQ warehouse ready: five workflow zones, roof control and 24-second demonstration.');
+      raf = requestAnimationFrame(frame);
+    } catch (error) { fail(error); }
+    window.addEventListener('pagehide', () => {
+      disposed = true;
+      cancelAnimationFrame(raf);
+      if (clickListener) spline.removeEventListener('mouseDown', clickListener);
+    }, { once: true });
+  })();
+  </script>
+</body>
+</html>

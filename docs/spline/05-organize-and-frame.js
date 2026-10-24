@@ -1,0 +1,40 @@
+// Final typography uses explicit text boxes; defaults greatly overstate glyph bounds.
+select(o => /^Warehouse Roof Beam /.test(o.name));
+position({ y: 350 });
+select(o => /^Zone [1-5] Number$/.test(o.name));
+geometry({ width: 52, height: 42, horizontalAlign: 'center', verticalAlign: 'center' });
+position({ y: 76 });
+select('Zone 5 Number');
+position({ y: 17 });
+select(o => /^Zone [1-5] Label$/.test(o.name));
+geometry({ width: 275, height: 38, horizontalAlign: 'center', verticalAlign: 'center' });
+select('Warehouse Brand');
+geometry({ width: 400, height: 72, horizontalAlign: 'center', verticalAlign: 'center' });
+select('Control Desk Screen Content');
+geometry({ width: 140, height: 60, horizontalAlign: 'center', verticalAlign: 'center' });
+select(o => o.name.startsWith('Delivery Truck '));
+group();
+rename('FleetIQ Delivery Truck');
+addEvent('MouseDown');
+select(o => o.name.startsWith('Control Desk '));
+group();
+rename('Warehouse Planning Desk');
+select(o => o.name.startsWith('Yard '));
+group();
+rename('Warehouse Yard Route');
+select(o => o.name.startsWith('Loading Dock ') || o.name.startsWith('Dock Bollard'));
+group();
+rename('Warehouse Loading Dock');
+for (let n = 1; n <= 5; n++) {
+  select('Zone ' + n + ' Pad');
+  select('Zone ' + n + ' Target', 'add');
+  select('Zone ' + n + ' Number', 'add');
+  select('Zone ' + n + ' Label', 'add');
+  group();
+  rename('Process Zone ' + n);
+}
+select(o => o.name.startsWith('Warehouse ') && o.name !== 'Warehouse Roof' && o.name !== 'Warehouse Site' && o.name !== 'Warehouse Planning Desk' && o.name !== 'Warehouse Yard Route' && o.name !== 'Warehouse Loading Dock');
+group();
+rename('FleetIQ Warehouse');
+playControls({ rotate: true, pan: true, zoom: true, autoRotate: false });
+lookFrom({ azimuth: -24, elevation: 37 });
