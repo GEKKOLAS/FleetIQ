@@ -9,7 +9,7 @@ public sealed class TrackingDbContextFactory : IDesignTimeDbContextFactory<Track
     public TrackingDbContext CreateDbContext(string[] args)
     {
         var options = new DbContextOptionsBuilder<TrackingDbContext>()
-            .UseNpgsql("Host=localhost;Port=5432;Database=fleetiq_tracking;Username=fleetiq;Password=REDACTED")
+            .UseNpgsql("Host=localhost;Port=5432;Database=fleetiq_tracking;Username=fleetiq")
             .Options;
         return new TrackingDbContext(options);
     }

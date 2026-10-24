@@ -27,14 +27,15 @@ public static class Config
         new ApiResource("fleetiq.api") { Scopes = { "fleetiq.api" } }
     ];
 
-    public static IEnumerable<Client> Clients =>
+    /// <param name="serviceClientSecret">From configuration (IdentityServer:ServiceClientSecret) - never hardcoded.</param>
+    public static IEnumerable<Client> Clients(string serviceClientSecret) =>
     [
         // Service-to-service (client credentials)
         new Client
         {
             ClientId = "fleetiq.service",
             AllowedGrantTypes = GrantTypes.ClientCredentials,
-            ClientSecrets = { new Secret(Sha256("REDACTED")) },
+            ClientSecrets = { new Secret(Sha256(serviceClientSecret)) },
             AllowedScopes = { "fleetiq.api" }
         },
         // SPA / mobile (Authorization Code + PKCE) - for the Angular/Next.js clients later

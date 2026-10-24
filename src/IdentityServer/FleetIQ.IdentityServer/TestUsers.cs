@@ -7,13 +7,14 @@ namespace FleetIQ.IdentityServer;
 /// <summary>Dev-only in-memory users. Replace with ASP.NET Core Identity / a real store before production.</summary>
 public static class TestUsers
 {
-    public static List<TestUser> Users =>
+    /// <param name="password">From configuration (IdentityServer:DemoUserPassword) - never hardcoded.</param>
+    public static List<TestUser> Users(string password) =>
     [
         new TestUser
         {
             SubjectId = "1",
             Username = "alice",
-            Password = "REDACTED",
+            Password = password,
             Claims =
             {
                 new Claim(JwtClaimTypes.Name, "Alice Smith"),
@@ -24,7 +25,7 @@ public static class TestUsers
         {
             SubjectId = "2",
             Username = "bob",
-            Password = "REDACTED",
+            Password = password,
             Claims =
             {
                 new Claim(JwtClaimTypes.Name, "Bob Jones"),

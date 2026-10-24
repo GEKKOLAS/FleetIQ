@@ -9,7 +9,7 @@ public sealed class IdentityDbContextFactory : IDesignTimeDbContextFactory<Ident
     public IdentityDbContext CreateDbContext(string[] args)
     {
         var options = new DbContextOptionsBuilder<IdentityDbContext>()
-            .UseNpgsql("Host=localhost;Port=5432;Database=fleetiq_identity;Username=fleetiq;Password=REDACTED")
+            .UseNpgsql("Host=localhost;Port=5432;Database=fleetiq_identity;Username=fleetiq")
             .Options;
         return new IdentityDbContext(options);
     }

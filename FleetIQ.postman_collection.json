@@ -28,6 +28,11 @@
       "value": ""
     },
     {
+      "key": "clientSecret",
+      "value": "",
+      "description": "FLEETIQ_SERVICE_CLIENT_SECRET from your local .env (scripts/setup-secrets.ps1). Set it in your Postman environment; never commit it."
+    },
+    {
       "key": "customerId",
       "value": "22222222-2222-2222-2222-222222222222"
     },
@@ -107,7 +112,7 @@
             },
             {
               "key": "client_secret",
-              "value": "REDACTED"
+              "value": "{{clientSecret}}"
             },
             {
               "key": "scope",

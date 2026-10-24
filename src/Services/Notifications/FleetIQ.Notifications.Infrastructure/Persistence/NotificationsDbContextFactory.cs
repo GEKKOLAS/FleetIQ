@@ -9,7 +9,7 @@ public sealed class NotificationsDbContextFactory : IDesignTimeDbContextFactory<
     public NotificationsDbContext CreateDbContext(string[] args)
     {
         var options = new DbContextOptionsBuilder<NotificationsDbContext>()
-            .UseNpgsql("Host=localhost;Port=5432;Database=fleetiq_notifications;Username=fleetiq;Password=REDACTED")
+            .UseNpgsql("Host=localhost;Port=5432;Database=fleetiq_notifications;Username=fleetiq")
             .Options;
         return new NotificationsDbContext(options);
     }

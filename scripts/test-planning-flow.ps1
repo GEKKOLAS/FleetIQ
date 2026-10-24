@@ -15,12 +15,15 @@ $gw  = 'http://localhost:5080'
 function Step($n, $msg) { Write-Host "`n[$n] $msg" -ForegroundColor Cyan }
 
 # --- Token (client_credentials, service client) ---
+$clientSecret = (Get-Content (Join-Path $PSScriptRoot "../.env") | Where-Object { $_ -match "^FLEETIQ_SERVICE_CLIENT_SECRET=" }) -replace "^[^=]+=", ""
+if (-not $clientSecret) { throw "FLEETIQ_SERVICE_CLIENT_SECRET missing - run scripts/setup-secrets.ps1" }
+
 Step 0 "Requesting service token from IdentityServer..."
 $tok = Invoke-RestMethod -Method Post -Uri "$idp/connect/token" -SkipCertificateCheck `
     -ContentType 'application/x-www-form-urlencoded' -Body @{
         grant_type    = 'client_credentials'
         client_id     = 'fleetiq.service'
-        client_secret = 'REDACTED'
+        client_secret = $clientSecret
         scope         = 'fleetiq.api'
     }
 $H = @{ Authorization = "Bearer $($tok.access_token)" }

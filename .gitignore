@@ -6,3 +6,7 @@ obj/
 .env
 TestResults/
 *.log
+
+# IdentityServer signing keys - generated per machine, never commit
+src/IdentityServer/FleetIQ.IdentityServer/keys/
+src/IdentityServer/FleetIQ.IdentityServer/tempkey.jwk

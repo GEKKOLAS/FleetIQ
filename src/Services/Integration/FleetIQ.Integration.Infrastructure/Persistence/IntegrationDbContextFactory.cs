@@ -9,7 +9,7 @@ public sealed class IntegrationDbContextFactory : IDesignTimeDbContextFactory<In
     public IntegrationDbContext CreateDbContext(string[] args)
     {
         var options = new DbContextOptionsBuilder<IntegrationDbContext>()
-            .UseNpgsql("Host=localhost;Port=5432;Database=fleetiq_integration;Username=fleetiq;Password=REDACTED")
+            .UseNpgsql("Host=localhost;Port=5432;Database=fleetiq_integration;Username=fleetiq")
             .Options;
         return new IntegrationDbContext(options);
     }

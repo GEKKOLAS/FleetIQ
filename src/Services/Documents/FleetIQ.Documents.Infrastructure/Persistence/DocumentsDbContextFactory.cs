@@ -9,7 +9,7 @@ public sealed class DocumentsDbContextFactory : IDesignTimeDbContextFactory<Docu
     public DocumentsDbContext CreateDbContext(string[] args)
     {
         var options = new DbContextOptionsBuilder<DocumentsDbContext>()
-            .UseNpgsql("Host=localhost;Port=5432;Database=fleetiq_documents;Username=fleetiq;Password=REDACTED")
+            .UseNpgsql("Host=localhost;Port=5432;Database=fleetiq_documents;Username=fleetiq")
             .Options;
         return new DocumentsDbContext(options);
     }

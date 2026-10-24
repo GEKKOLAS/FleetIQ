@@ -9,7 +9,7 @@ public sealed class ComplianceDbContextFactory : IDesignTimeDbContextFactory<Com
     public ComplianceDbContext CreateDbContext(string[] args)
     {
         var options = new DbContextOptionsBuilder<ComplianceDbContext>()
-            .UseNpgsql("Host=localhost;Port=5432;Database=fleetiq_compliance;Username=fleetiq;Password=REDACTED")
+            .UseNpgsql("Host=localhost;Port=5432;Database=fleetiq_compliance;Username=fleetiq")
             .Options;
         return new ComplianceDbContext(options);
     }

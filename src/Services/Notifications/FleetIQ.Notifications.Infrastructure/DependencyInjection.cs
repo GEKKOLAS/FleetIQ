@@ -24,7 +24,8 @@ public static class DependencyInjection
             x.AddConsumer<InvoiceIssuedConsumer>();   // <-- react to Billing's integration event
             x.UsingRabbitMq((context, cfg) =>
             {
-                cfg.Host(config.GetConnectionString("RabbitMq") ?? "amqp://fleetiq:REDACTED@localhost:5672");
+                cfg.Host(config.GetConnectionString("RabbitMq")
+                    ?? throw new InvalidOperationException("Missing ConnectionStrings:RabbitMq (run scripts/setup-secrets.ps1)"));
                 cfg.ConfigureEndpoints(context);
             });
         });

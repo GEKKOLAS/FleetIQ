@@ -51,7 +51,7 @@ ASPNETCORE_URLS=http://localhost:5080 dotnet run --project src/Gateway/FleetIQ.G
 
 # 4. get a service token
 TOKEN=$(curl -ks -X POST https://localhost:5001/connect/token \\
-  -d "grant_type=client_credentials&client_id=fleetiq.service&client_secret=REDACTED&scope=fleetiq.api" \\
+  -d "grant_type=client_credentials&client_id=fleetiq.service&client_secret=$FLEETIQ_SERVICE_CLIENT_SECRET&scope=fleetiq.api" \\
   | python3 -c "import sys,json;print(json.load(sys.stdin)['access_token'])")
 
 # 5. call a service THROUGH the gateway with the bearer token

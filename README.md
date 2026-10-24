@@ -100,7 +100,8 @@ compliance findings, connector health, prediction confidence) plus list endpoint
 **Prerequisites**: [.NET 10 SDK](https://dotnet.microsoft.com/download), Docker Desktop.
 
 ```bash
-cp .env.example .env
+./scripts/setup-secrets.ps1       # creates the git-ignored .env with random secrets
+                                  # and loads them into the shared .NET user-secrets store
 docker compose up -d              # Postgres(+PostGIS), RabbitMQ, Redis, MinIO
 make init                         # generate FleetIQ.slnx project references
 dotnet build FleetIQ.slnx
@@ -121,9 +122,10 @@ Front-end / API entry point: **http://localhost:5080**. Token endpoint:
 ### Try it end-to-end
 
 ```bash
-# 1. get a service token
+# 1. get a service token (the client secret lives in your local, git-ignored .env)
+export $(grep '^FLEETIQ_SERVICE_CLIENT_SECRET=' .env)
 TOKEN=$(curl -ks -X POST https://localhost:5001/connect/token \
-  -d "grant_type=client_credentials&client_id=fleetiq.service&client_secret=REDACTED&scope=fleetiq.api" \
+  -d "grant_type=client_credentials&client_id=fleetiq.service&client_secret=$FLEETIQ_SERVICE_CLIENT_SECRET&scope=fleetiq.api" \
   | grep -oE '"access_token":"[^"]+"' | cut -d'"' -f4)
 
 # 2. call a service THROUGH the gateway with the bearer token

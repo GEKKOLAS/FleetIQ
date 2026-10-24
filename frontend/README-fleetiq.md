@@ -20,7 +20,7 @@ services you'll use (Orders 5081, Billing 5086). Trust the dev cert (`dotnet dev
 
 ## ✅ Auth flow works end-to-end (verified 2026-07-03)
 IdentityServer has a login page (`Account/Login`) + logout and test users **alice / bob**
-(password `REDACTED`). Full flow verified: Landing → Enter app → IdP login → Dashboard, plus
+(password: `FLEETIQ_DEMO_USER_PASSWORD` in your local `.env`, see `scripts/setup-secrets.ps1`). Full flow verified: Landing → Enter app → IdP login → Dashboard, plus
 deep links / full reloads on `/app/*` while logged in.
 
 Two OIDC config fixes were needed on the Angular side:
