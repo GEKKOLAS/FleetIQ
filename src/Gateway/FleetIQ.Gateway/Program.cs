@@ -9,9 +9,9 @@ builder.Services.AddReverseProxy().LoadFromConfig(builder.Configuration.GetSecti
 builder.Services.AddFleetIqJwtAuth(builder.Configuration);
 builder.Services.AddHealthChecks();
 
-// Allow the Angular dev app (http://localhost:4200) to call the gateway, including SignalR (credentials).
+// Allow the Angular app (dev server + GitHub Pages) to call the gateway, including SignalR (credentials).
 const string FrontendCors = "frontend";
-builder.Services.AddCors(o => o.AddPolicy(FrontendCors, p => p.WithOrigins("http://localhost:4200").AllowAnyHeader().AllowAnyMethod().AllowCredentials()));
+builder.Services.AddCors(o => o.AddPolicy(FrontendCors, p => p.WithOrigins("http://localhost:4200", "https://gekkolas.github.io").AllowAnyHeader().AllowAnyMethod().AllowCredentials()));
 
 var app = builder.Build();
 

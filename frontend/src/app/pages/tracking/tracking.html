@@ -1,0 +1,45 @@
+<p-toast />
+<section class="operations">
+    <header class="operations-header">
+        <div><div class="eyebrow"><span></span> FLEETIQ / CONTROL TOWER</div><h1>Cada envío. Bajo control.</h1><p>Visibilidad de tu operación logística en un solo lugar.</p></div>
+        <div class="header-actions"><button class="secondary" type="button" (click)="load()" [disabled]="loading"><i class="pi pi-refresh" [class.pi-spin]="loading"></i> Actualizar</button><p-button label="Nuevo envío" icon="pi pi-plus" (onClick)="newShipment()" [loading]="creating" /></div>
+    </header>
+    <div class="metrics">
+        <div class="metric"><span class="metric-icon"><i class="pi pi-box"></i></span><div><span>Envíos cargados</span><strong>{{ shipments.length | number: '2.0-0' }}</strong></div><small>Hasta 100 envíos</small></div>
+        <div class="metric"><span class="metric-icon mint"><i class="pi pi-truck"></i></span><div><span>En tránsito</span><strong>{{ inTransit | number: '2.0-0' }}</strong></div><small>Operación activa</small></div>
+        <div class="metric"><span class="metric-icon blue"><i class="pi pi-map-marker"></i></span><div><span>Con posición GPS</span><strong>{{ positioned | number: '2.0-0' }}</strong></div><small>Ubicación disponible</small></div>
+        <div class="metric"><span class="metric-icon amber"><i class="pi pi-check-circle"></i></span><div><span>Entregados</span><strong>{{ delivered | number: '2.0-0' }}</strong></div><small>Destino completado</small></div>
+    </div>
+    <div class="workspace">
+        <div class="visual-panel">
+            <div class="visual-toolbar"><div class="visual-title"><i class="pi pi-globe"></i><div><strong>Red de distribución</strong><span>LIVE TRACKING</span></div></div><div class="view-switch" aria-label="Visualización"><button type="button" [class.active]="view === '3d'" [attr.aria-pressed]="view === '3d'" (click)="setView('3d')"><i class="pi pi-box"></i> Vista 3D</button><button type="button" [class.active]="view === 'map'" [attr.aria-pressed]="view === 'map'" (click)="setView('map')"><i class="pi pi-map"></i> Mapa</button></div></div>
+            <div class="map-stage">
+                <div #mapEl class="street-map" [class.hidden-map]="view !== 'map'" [attr.aria-hidden]="view !== 'map'"></div>
+                @if (view === '3d') { @defer (on immediate) { <app-logistics-scene [shipments]="shipments" [routes]="routes" [selectedId]="selectedId" (selected)="selectById($event)" /> } @placeholder { <div class="scene-loading">Preparando vista 3D…</div> } }
+                <div class="connection" [class.offline]="!connected" role="status"><span></span>{{ connected ? 'Telemetría conectada' : 'Telemetría desconectada' }}</div>
+                @if (view === 'map') { <button class="fit-button" type="button" (click)="fitFleet()"><i class="pi pi-expand"></i> Ver flota</button> }
+            </div>
+            <div class="map-legend"><span><i class="legend-dot"></i> Vehículo</span><span><i class="pi pi-building"></i> Origen / destino</span><span><i class="route-line"></i> Ruta vial</span><span><i class="route-line dashed"></i> Conexión estimada 3D</span></div>
+        </div>
+        <aside class="shipment-panel">
+            <div class="panel-heading"><div><span class="eyebrow">FLEET MONITOR</span><h2>Envíos <span>{{ filteredShipments.length }}</span></h2></div><i class="pi pi-sliders-h"></i></div>
+            <label class="search"><i class="pi pi-search"></i><input type="search" [(ngModel)]="query" placeholder="Buscar ID, origen o destino" aria-label="Buscar envíos" /></label>
+            <div class="filter-row"><label for="shipment-status">Estado</label><select id="shipment-status" [(ngModel)]="statusFilter"><option value="all">Todos los envíos</option><option value="InTransit">En tránsito</option><option value="Dispatched">Despachados</option><option value="Delivered">Entregados</option></select></div>
+            <div class="shipment-list" [attr.aria-busy]="loading">
+                @if (loading && !shipments.length) { <div class="empty"><i class="pi pi-spin pi-spinner"></i><strong>Cargando operación…</strong></div> }
+                @else if (loadError) { <div class="empty"><i class="pi pi-wifi"></i><strong>No se pudieron cargar los envíos</strong><span>Comprueba la conexión con el servicio.</span><button type="button" class="secondary" (click)="load()">Reintentar</button></div> }
+                @else { @for (s of filteredShipments; track s.id) {
+                    <button class="shipment" type="button" [class.selected]="selectedId === s.id" [attr.aria-pressed]="selectedId === s.id" (click)="focus(s)">
+                        <div class="shipment-top"><span class="truck-badge"><i class="pi pi-truck"></i></span><strong>FIQ–{{ s.id.substring(0, 8).toUpperCase() }}</strong><span class="status-dot" [style.background]="colorFor(s.id)"></span></div>
+                        <div class="journey"><span>{{ s.originCity || 'Origen sin registrar' }}</span><i class="pi pi-arrow-right"></i><span>{{ s.destinationCity || 'Destino sin registrar' }}</span></div>
+                        <div class="shipment-bottom"><span class="status" [class.delivered]="s.status === 'Delivered'">{{ label(s.status) }}</span><span>{{ s.lastPositionAtUtc ? (s.lastPositionAtUtc | date: 'HH:mm:ss') : 'Sin reporte GPS' }}</span></div>
+                    </button>
+                } @empty { <div class="empty"><i class="pi pi-box"></i><strong>{{ shipments.length ? 'Sin coincidencias' : 'Tu operación empieza aquí' }}</strong><span>{{ shipments.length ? 'Prueba otro filtro o búsqueda.' : 'Los envíos aparecerán al estar disponibles.' }}</span></div> } }
+            </div>
+            <div class="panel-foot"><i class="pi pi-shield"></i> {{ connected ? 'Actualizaciones automáticas activas' : 'Consulta la última posición recibida' }}</div>
+        </aside>
+    </div>
+    @if (selectedShipment; as s) {
+        <section class="shipment-detail" aria-label="Detalle del envío seleccionado"><div class="detail-identity"><span class="metric-icon mint"><i class="pi pi-truck"></i></span><div><span class="eyebrow">ENVÍO SELECCIONADO</span><strong>FIQ–{{ s.id.substring(0, 8).toUpperCase() }}</strong></div></div><div><span>Trayecto</span><strong>{{ s.originCity || 'Sin origen' }} <i class="pi pi-arrow-right"></i> {{ s.destinationCity || 'Sin destino' }}</strong></div><div><span>Última posición</span><strong>{{ hasPosition(s) ? (s.currentLatitude | number: '1.4-4') + ', ' + (s.currentLongitude | number: '1.4-4') : 'Sin posición GPS' }}</strong></div><div><span>Velocidad reportada</span><strong>{{ speeds[s.id] != null ? (speeds[s.id] | number: '1.0-0') + ' km/h' : 'Sin reporte' }}</strong></div><div><span>Último reporte</span><strong>{{ s.lastPositionAtUtc ? (s.lastPositionAtUtc | date: 'medium') : 'Pendiente' }}</strong></div></section>
+    }
+</section>

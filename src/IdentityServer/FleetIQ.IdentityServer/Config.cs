@@ -46,9 +46,10 @@ public static class Config
             RequirePkce = true,
             RequireConsent = false,                 // no consent screen for our own SPA
             AllowedScopes = { "openid", "profile", "fleetiq.api" },
-            RedirectUris = { "http://localhost:4200/callback" },
-            PostLogoutRedirectUris = { "http://localhost:4200" },
-            AllowedCorsOrigins = { "http://localhost:4200" }
+            // local dev server + the GitHub Pages deployment (frontend/, .github/workflows/pages.yml)
+            RedirectUris = { "http://localhost:4200/callback", "https://gekkolas.github.io/FleetIQ/callback" },
+            PostLogoutRedirectUris = { "http://localhost:4200", "http://localhost:4200/", "https://gekkolas.github.io/FleetIQ/" },
+            AllowedCorsOrigins = { "http://localhost:4200", "https://gekkolas.github.io" }
         }
     ];
 }

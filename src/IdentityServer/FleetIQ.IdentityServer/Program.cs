@@ -7,7 +7,9 @@ builder.Host.UseSerilog((ctx, cfg) => cfg.ReadFrom.Configuration(ctx.Configurati
 
 builder.Services.AddRazorPages(); // interactive login UI
 
-builder.Services.AddIdentityServer()
+// Pin the issuer so tokens stay valid for the services (Authority=https://localhost:5001) even when
+// the IdP is reached through a public tunnel host (see scripts/start-public-demo.ps1).
+builder.Services.AddIdentityServer(o => o.IssuerUri = builder.Configuration["IdentityServer:IssuerUri"] ?? "https://localhost:5001")
     .AddInMemoryIdentityResources(Config.IdentityResources)
     .AddInMemoryApiScopes(Config.ApiScopes)
     .AddInMemoryApiResources(Config.ApiResources)
