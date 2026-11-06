@@ -6,7 +6,17 @@
   <img alt=".NET" src="https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white">
   <img alt="Architecture" src="https://img.shields.io/badge/architecture-DDD%20%2B%20Clean%20Architecture-38bdf8">
   <img alt="Services" src="https://img.shields.io/badge/bounded%20contexts-12-34d399">
+  <img alt="Angular" src="https://img.shields.io/badge/Angular-20-DD0031?logo=angular&logoColor=white">
   <img alt="CI" src="https://github.com/GEKKOLAS/FleetIQ/actions/workflows/ci.yml/badge.svg">
+</p>
+
+<p align="center">
+  <a href="#product-tour">Product tour</a> ·
+  <a href="#architecture">Architecture</a> ·
+  <a href="#services">Services</a> ·
+  <a href="#tech-stack">Tech stack</a> ·
+  <a href="#running-it">Running it</a> ·
+  <a href="#testing">Testing</a>
 </p>
 
 ## What FleetIQ is
@@ -25,6 +35,48 @@ This repo is also meant to be **cloned from**: `Orders` and `Billing` are fully 
 services (rich aggregates, child entities, state machines, paged queries), and every other service
 follows the same four-layer shape, so extending the system means copying a folder and modeling a new
 aggregate — not inventing new plumbing.
+
+## Product tour
+
+FleetIQ ships with an **Angular 20 + PrimeNG** web console (`frontend/`) that talks to the platform
+exclusively through the Gateway, authenticated with OIDC (Authorization Code + PKCE).
+
+<p align="center">
+  <img src="docs/images/screenshots/landing.jpg" alt="FleetIQ landing page" width="100%">
+</p>
+
+### Operations dashboard
+
+One screen for the whole operation: order volume, active loads, shipments in transit and invoiced
+revenue, plus daily activity, the shipment pipeline and where planning work is sitting right now.
+
+<p align="center">
+  <img src="docs/images/screenshots/dashboard.png" alt="Operations dashboard with KPIs, activity chart, shipment pipeline and loads by status" width="100%">
+</p>
+
+### Live tracking — control tower
+
+An interactive 3D view of the distribution network (or a classic map) fed by the Tracking service,
+with a fleet monitor to search and filter every shipment and real-time position updates over SignalR.
+
+<p align="center">
+  <img src="docs/images/screenshots/tracking.png" alt="Live tracking control tower with 3D distribution network and fleet monitor" width="100%">
+</p>
+
+### Orders, planning, carriers and billing
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/images/screenshots/orders.png" alt="Orders list with status and lifecycle actions"><p align="center"><b>Orders</b> — create, confirm and hand orders off to planning</p></td>
+    <td width="50%"><img src="docs/images/screenshots/planning.png" alt="Planning loads with routes, weight and status"><p align="center"><b>Planning</b> — consolidate orders into loads and assign carriers</p></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/images/screenshots/carriers.png" alt="Carrier registry with capacity, fleet and verification status"><p align="center"><b>Carriers</b> — capacity, fleet, drivers and verification</p></td>
+    <td width="50%"><img src="docs/images/screenshots/billing.png" alt="Invoices with status, totals and actions"><p align="center"><b>Billing</b> — draft, issue and settle invoices</p></td>
+  </tr>
+</table>
+
+> Screenshots were taken from the frontend in this repo running against sample data.
 
 ## Architecture
 
@@ -85,6 +137,7 @@ compliance findings, connector health, prediction confidence) plus list endpoint
 | Concern | Choice |
 |---|---|
 | Runtime | ASP.NET Core on **.NET 10** |
+| Frontend | **Angular 20** + PrimeNG (Sakai), Tailwind, Chart.js, Three.js, Leaflet, SignalR |
 | Data access | EF Core (Npgsql) against **PostgreSQL + PostGIS** |
 | Messaging | **RabbitMQ** via MassTransit (transactional outbox pattern) |
 | Auth | **Duende IdentityServer** (OIDC/OAuth2) + JWT bearer validation |
@@ -116,8 +169,19 @@ dotnet dev-certs https --trust    # trust the local HTTPS dev cert, once
 ./scripts/start-core.ps1
 ```
 
-Front-end / API entry point: **http://localhost:5080**. Token endpoint:
+API entry point (Gateway): **http://localhost:5080**. Token endpoint:
 **https://localhost:5001/connect/token**.
+
+### Running the web console
+
+```bash
+cd frontend
+npm install
+npm start                         # http://localhost:4200
+```
+
+Sign in with the demo users **alice** / **bob** (password: `FLEETIQ_DEMO_USER_PASSWORD` in your
+local `.env`). See [`frontend/README-fleetiq.md`](frontend/README-fleetiq.md) for details.
 
 ### Try it end-to-end
 
@@ -175,6 +239,7 @@ transitions). CI runs the same command on every push and pull request.
 
 ```
 fleetiq/
+  frontend/                     # Angular 20 + PrimeNG web console (OIDC, talks to the Gateway)
   docker-compose.yml            # Postgres(+PostGIS) · RabbitMQ · Redis · MinIO
   Directory.Packages.props      # central NuGet versions
   src/
