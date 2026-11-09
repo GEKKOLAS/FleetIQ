@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { TABLE_CELLS } from '../../shared/table-cells';
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MessageService } from 'primeng/api';
@@ -16,7 +17,7 @@ import { NotificationsService } from '../../core/notifications.service';
 @Component({
     selector: 'app-notifications',
     standalone: true,
-    imports: [CommonModule, FormsModule, TableModule, ButtonModule, DialogModule, InputTextModule, SelectModule, TagModule, ToastModule, ToolbarModule],
+    imports: [...TABLE_CELLS, CommonModule, FormsModule, TableModule, ButtonModule, DialogModule, InputTextModule, SelectModule, TagModule, ToastModule, ToolbarModule],
     providers: [MessageService],
     template: `
         <p-toast />
@@ -29,12 +30,13 @@ import { NotificationsService } from '../../core/notifications.service';
                     </div>
                 </ng-template>
                 <ng-template #end>
+                    <span class="p-input-icon-left table-search"><i class="pi pi-search"></i><input pInputText type="search" placeholder="Search" aria-label="Search table" (input)="dt.filterGlobal($any($event.target).value, 'contains')" /></span>
                     <p-button label="Refresh" icon="pi pi-refresh" [text]="true" (onClick)="load()" />
                     <p-button label="New Notification" icon="pi pi-plus" (onClick)="newDialog = true" />
                 </ng-template>
             </p-toolbar>
 
-            <p-table [value]="notifications" [loading]="loading" [paginator]="true" [rows]="10" dataKey="id" [rowHover]="true">
+            <p-table #dt [globalFilterFields]="['recipient','channel','templateId','status']" [value]="notifications" [loading]="loading" [paginator]="true" [rows]="10" dataKey="id" [rowHover]="true">
                 <ng-template #header>
                     <tr><th>Recipient</th><th>Channel</th><th>Template</th><th>Status</th><th>Created</th><th style="width: 9rem"></th></tr>
                 </ng-template>
@@ -43,8 +45,8 @@ import { NotificationsService } from '../../core/notifications.service';
                         <td class="font-medium">{{ n.recipient }}</td>
                         <td><i [class]="channelIcon(n.channel)" class="mr-2 text-muted-color"></i>{{ n.channel }}</td>
                         <td class="text-muted-color">{{ n.templateId }}</td>
-                        <td><p-tag [value]="n.status" [severity]="n.status === 'Sent' ? 'success' : 'warn'" /></td>
-                        <td>{{ n.createdOnUtc | date: 'short' }}</td>
+                        <td><app-status [value]="n.status" /></td>
+                        <td><app-when [value]="n.createdOnUtc" /></td>
                         <td>
                             <p-button label="Mark sent" icon="pi pi-send" [text]="true" size="small"
                                       [disabled]="n.status !== 'Pending'" (onClick)="markSent(n)" />

@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { TABLE_CELLS, partyName } from '../../shared/table-cells';
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MessageService } from 'primeng/api';
@@ -19,7 +20,7 @@ const DEFAULT_CUSTOMER = '22222222-2222-2222-2222-222222222222';
 @Component({
     selector: 'app-orders',
     standalone: true,
-    imports: [CommonModule, FormsModule, TableModule, ButtonModule, DialogModule, InputTextModule, InputNumberModule, TagModule, ToastModule, ToolbarModule, TooltipModule],
+    imports: [...TABLE_CELLS, CommonModule, FormsModule, TableModule, ButtonModule, DialogModule, InputTextModule, InputNumberModule, TagModule, ToastModule, ToolbarModule, TooltipModule],
     providers: [MessageService],
     template: `
         <p-toast />
@@ -27,30 +28,31 @@ const DEFAULT_CUSTOMER = '22222222-2222-2222-2222-222222222222';
             <p-toolbar styleClass="mb-4">
                 <ng-template #start><span class="text-xl font-semibold">Orders</span></ng-template>
                 <ng-template #end>
+                    <span class="p-input-icon-left table-search"><i class="pi pi-search"></i><input pInputText type="search" placeholder="Search" aria-label="Search table" (input)="dt.filterGlobal($any($event.target).value, 'contains')" /></span>
                     <p-button label="Refresh" icon="pi pi-refresh" [text]="true" (onClick)="load()" />
                     <p-button label="New Order" icon="pi pi-plus" (onClick)="openNew()" />
                 </ng-template>
             </p-toolbar>
 
-            <p-table [value]="orders" [loading]="loading" [paginator]="true" [rows]="10" dataKey="id" [rowHover]="true">
+            <p-table #dt [globalFilterFields]="['orderNumber','status','customerName']" [value]="orders" [loading]="loading" [paginator]="true" [rows]="10" dataKey="id" [rowHover]="true">
                 <ng-template #header>
                     <tr>
-                        <th>Order #</th>
-                        <th>Customer</th>
-                        <th>Status</th>
-                        <th>Created</th>
+                        <th pSortableColumn="orderNumber">Order # <p-sortIcon field="orderNumber" /></th>
+                        <th pSortableColumn="customerName">Customer <p-sortIcon field="customerName" /></th>
+                        <th pSortableColumn="status">Status <p-sortIcon field="status" /></th>
+                        <th pSortableColumn="createdOnUtc">Created <p-sortIcon field="createdOnUtc" /></th>
                         <th style="width: 14rem"></th>
                     </tr>
                 </ng-template>
                 <ng-template #body let-o>
                     <tr>
-                        <td>{{ o.orderNumber }}</td>
-                        <td class="text-muted-color">{{ o.customerId.substring(0, 8) }}…</td>
-                        <td><p-tag [value]="o.status" [severity]="severity(o.status)" /></td>
-                        <td>{{ o.createdOnUtc | date: 'short' }}</td>
+                        <td class="font-semibold whitespace-nowrap" style="font-variant-numeric: tabular-nums">{{ o.orderNumber }}</td>
+                        <td><app-party [id]="o.customerId" /></td>
+                        <td><app-status [value]="o.status" /></td>
+                        <td><app-when [value]="o.createdOnUtc" /></td>
                         <td>
-                            <p-button icon="pi pi-check" [rounded]="true" [text]="true" severity="success" pTooltip="Confirm" (onClick)="confirm(o)" />
-                            <p-button icon="pi pi-times" [rounded]="true" [text]="true" severity="danger" pTooltip="Cancel" (onClick)="cancel(o)" />
+                            <p-button label="Confirm" icon="pi pi-check" [text]="true" size="small" severity="success" [disabled]="o.status !== 'Draft'" (onClick)="confirm(o)" />
+                            <p-button label="Cancel" icon="pi pi-times" [text]="true" size="small" severity="danger" [disabled]="o.status === 'Cancelled' || o.status === 'ReadyForPlanning'" (onClick)="cancel(o)" />
                         </td>
                     </tr>
                 </ng-template>
@@ -84,7 +86,7 @@ export class Orders implements OnInit {
     private api = inject(OrdersService);
     private toast = inject(MessageService);
 
-    orders: OrderSummary[] = [];
+    orders: (OrderSummary & { customerName: string })[] = [];
     loading = false;
     dialog = false;
     saving = false;
@@ -106,7 +108,7 @@ export class Orders implements OnInit {
         this.loading = true;
         this.api.list({ page: 1, pageSize: 100 }).subscribe({
             next: (p) => {
-                this.orders = p.items;
+                this.orders = p.items.map((row) => ({ ...row, customerName: partyName(row.customerId) }));  // resolved name, for search and sort
                 this.loading = false;
             },
             error: () => {

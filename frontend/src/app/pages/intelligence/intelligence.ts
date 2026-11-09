@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { TABLE_CELLS } from '../../shared/table-cells';
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MessageService } from 'primeng/api';
@@ -21,7 +22,7 @@ type Sev = 'success' | 'info' | 'warn' | 'danger' | 'secondary';
 @Component({
     selector: 'app-intelligence',
     standalone: true,
-    imports: [CommonModule, FormsModule, TableModule, ButtonModule, DialogModule, InputTextModule, InputNumberModule, SelectModule, TagModule, TextareaModule, ToastModule, TooltipModule, ToolbarModule],
+    imports: [...TABLE_CELLS, CommonModule, FormsModule, TableModule, ButtonModule, DialogModule, InputTextModule, InputNumberModule, SelectModule, TagModule, TextareaModule, ToastModule, TooltipModule, ToolbarModule],
     providers: [MessageService],
     template: `
         <p-toast />
@@ -34,12 +35,13 @@ type Sev = 'success' | 'info' | 'warn' | 'danger' | 'secondary';
                     </div>
                 </ng-template>
                 <ng-template #end>
+                    <span class="p-input-icon-left table-search"><i class="pi pi-search"></i><input pInputText type="search" placeholder="Search" aria-label="Search table" (input)="dt.filterGlobal($any($event.target).value, 'contains')" /></span>
                     <p-button label="Refresh" icon="pi pi-refresh" [text]="true" (onClick)="load()" />
                     <p-button label="New Prediction" icon="pi pi-plus" (onClick)="newDialog = true" />
                 </ng-template>
             </p-toolbar>
 
-            <p-table [value]="predictions" [loading]="loading" [paginator]="true" [rows]="10" dataKey="id" [rowHover]="true">
+            <p-table #dt [globalFilterFields]="['modelId','predictionType','status']" [value]="predictions" [loading]="loading" [paginator]="true" [rows]="10" dataKey="id" [rowHover]="true">
                 <ng-template #header>
                     <tr><th>Model</th><th>Type</th><th>Status</th><th>Confidence</th><th>Finished</th><th style="width: 14rem"></th></tr>
                 </ng-template>
@@ -48,13 +50,13 @@ type Sev = 'success' | 'info' | 'warn' | 'danger' | 'secondary';
                         <td class="font-medium"><code class="text-sm">{{ p.modelId }}</code></td>
                         <td>{{ p.predictionType }}</td>
                         <td>
-                            <p-tag [value]="p.status" [severity]="severity(p.status)" />
+                            <app-status [value]="p.status" />
                             @if (p.error) {
                                 <i class="pi pi-info-circle text-muted-color ml-1" [pTooltip]="p.error"></i>
                             }
                         </td>
                         <td style="font-variant-numeric: tabular-nums">{{ p.confidence != null ? (p.confidence | percent: '1.0-1') : '—' }}</td>
-                        <td>{{ p.finishedOnUtc ? (p.finishedOnUtc | date: 'short') : '—' }}</td>
+                        <td><app-when [value]="p.finishedOnUtc" /></td>
                         <td class="flex gap-1">
                             <p-button label="Start" [text]="true" size="small" [disabled]="p.status !== 'Requested'" (onClick)="startPrediction(p)" />
                             <p-button label="Complete" [text]="true" size="small" severity="success" [disabled]="p.status !== 'Running'" (onClick)="askComplete(p)" />

@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { TABLE_CELLS, partyName } from '../../shared/table-cells';
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MessageService } from 'primeng/api';
@@ -19,7 +20,7 @@ const DEFAULT_CUSTOMER = '22222222-2222-2222-2222-222222222222';
 @Component({
     selector: 'app-billing',
     standalone: true,
-    imports: [CommonModule, FormsModule, TableModule, ButtonModule, DialogModule, InputTextModule, InputNumberModule, TagModule, ToastModule, ToolbarModule, TooltipModule],
+    imports: [...TABLE_CELLS, CommonModule, FormsModule, TableModule, ButtonModule, DialogModule, InputTextModule, InputNumberModule, TagModule, ToastModule, ToolbarModule, TooltipModule],
     providers: [MessageService],
     template: `
         <p-toast />
@@ -27,30 +28,31 @@ const DEFAULT_CUSTOMER = '22222222-2222-2222-2222-222222222222';
             <p-toolbar styleClass="mb-4">
                 <ng-template #start><span class="text-xl font-semibold">Invoices</span></ng-template>
                 <ng-template #end>
+                    <span class="p-input-icon-left table-search"><i class="pi pi-search"></i><input pInputText type="search" placeholder="Search" aria-label="Search table" (input)="dt.filterGlobal($any($event.target).value, 'contains')" /></span>
                     <p-button label="Refresh" icon="pi pi-refresh" [text]="true" (onClick)="load()" />
                     <p-button label="New Invoice" icon="pi pi-plus" (onClick)="dialog = true" />
                 </ng-template>
             </p-toolbar>
 
-            <p-table [value]="invoices" [loading]="loading" [paginator]="true" [rows]="10" dataKey="id" [rowHover]="true">
+            <p-table #dt [globalFilterFields]="['status','currency','customerName']" [value]="invoices" [loading]="loading" [paginator]="true" [rows]="10" dataKey="id" [rowHover]="true">
                 <ng-template #header>
                     <tr>
-                        <th>Customer</th>
-                        <th>Status</th>
-                        <th class="text-right">Total</th>
-                        <th>Created</th>
+                        <th pSortableColumn="customerName">Customer <p-sortIcon field="customerName" /></th>
+                        <th pSortableColumn="status">Status <p-sortIcon field="status" /></th>
+                        <th class="text-right" pSortableColumn="total">Total <p-sortIcon field="total" /></th>
+                        <th pSortableColumn="createdOnUtc">Created <p-sortIcon field="createdOnUtc" /></th>
                         <th style="width: 14rem"></th>
                     </tr>
                 </ng-template>
                 <ng-template #body let-i>
                     <tr>
-                        <td class="text-muted-color">{{ i.customerId.substring(0, 8) }}…</td>
-                        <td><p-tag [value]="i.status" [severity]="severity(i.status)" /></td>
-                        <td class="text-right">{{ i.total | number: '1.2-2' }} {{ i.currency }}</td>
-                        <td>{{ i.createdOnUtc | date: 'short' }}</td>
+                        <td><app-party [id]="i.customerId" /></td>
+                        <td><app-status [value]="i.status" /></td>
+                        <td class="text-right font-semibold whitespace-nowrap" style="font-variant-numeric: tabular-nums">{{ i.total | number: '1.2-2' }} <span class="text-muted-color font-normal text-sm">{{ i.currency }}</span></td>
+                        <td><app-when [value]="i.createdOnUtc" /></td>
                         <td>
-                            <p-button icon="pi pi-send" [rounded]="true" [text]="true" severity="info" pTooltip="Issue" (onClick)="issue(i)" />
-                            <p-button icon="pi pi-times" [rounded]="true" [text]="true" severity="danger" pTooltip="Cancel" (onClick)="cancel(i)" />
+                            <p-button label="Issue" icon="pi pi-send" [text]="true" size="small" [disabled]="i.status !== 'Draft'" (onClick)="issue(i)" />
+                            <p-button label="Cancel" icon="pi pi-times" [text]="true" size="small" severity="danger" [disabled]="i.status === 'Paid' || i.status === 'Cancelled'" (onClick)="cancel(i)" />
                         </td>
                     </tr>
                 </ng-template>
@@ -82,7 +84,7 @@ export class Billing implements OnInit {
     private api = inject(BillingService);
     private toast = inject(MessageService);
 
-    invoices: InvoiceSummary[] = [];
+    invoices: (InvoiceSummary & { customerName: string })[] = [];
     loading = false;
     dialog = false;
     saving = false;
@@ -102,7 +104,7 @@ export class Billing implements OnInit {
     load() {
         this.loading = true;
         this.api.list({ page: 1, pageSize: 100, sort: 'created_desc' }).subscribe({
-            next: (p) => { this.invoices = p.items; this.loading = false; },
+            next: (p) => { this.invoices = p.items.map((row) => ({ ...row, customerName: partyName(row.customerId) })); this.loading = false; },
             error: () => { this.loading = false; this.err('Could not load invoices'); }
         });
     }

@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { TABLE_CELLS } from '../../shared/table-cells';
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MessageService } from 'primeng/api';
@@ -18,7 +19,7 @@ type Sev = 'success' | 'info' | 'warn' | 'danger' | 'secondary';
 @Component({
     selector: 'app-compliance',
     standalone: true,
-    imports: [CommonModule, FormsModule, TableModule, ButtonModule, DialogModule, InputTextModule, SelectModule, TagModule, ToastModule, ToolbarModule],
+    imports: [...TABLE_CELLS, CommonModule, FormsModule, TableModule, ButtonModule, DialogModule, InputTextModule, SelectModule, TagModule, ToastModule, ToolbarModule],
     providers: [MessageService],
     template: `
         <p-toast />
@@ -31,12 +32,13 @@ type Sev = 'success' | 'info' | 'warn' | 'danger' | 'secondary';
                     </div>
                 </ng-template>
                 <ng-template #end>
+                    <span class="p-input-icon-left table-search"><i class="pi pi-search"></i><input pInputText type="search" placeholder="Search" aria-label="Search table" (input)="dt.filterGlobal($any($event.target).value, 'contains')" /></span>
                     <p-button label="Refresh" icon="pi pi-refresh" [text]="true" (onClick)="load()" />
                     <p-button label="New Check" icon="pi pi-plus" (onClick)="newDialog = true" />
                 </ng-template>
             </p-toolbar>
 
-            <p-table [value]="checks" [loading]="loading" [paginator]="true" [rows]="10" dataKey="id" [rowHover]="true">
+            <p-table #dt [globalFilterFields]="['subjectType','ruleCode','jurisdiction','status']" [value]="checks" [loading]="loading" [paginator]="true" [rows]="10" dataKey="id" [rowHover]="true">
                 <ng-template #header>
                     <tr><th>Subject</th><th>Rule</th><th>Jurisdiction</th><th>Findings</th><th>Status</th><th>Created</th><th style="width: 8rem"></th></tr>
                 </ng-template>
@@ -51,8 +53,8 @@ type Sev = 'success' | 'info' | 'warn' | 'danger' | 'secondary';
                                 <i class="pi pi-exclamation-triangle text-red-500 ml-1" title="Has High/Critical findings"></i>
                             }
                         </td>
-                        <td><p-tag [value]="c.status" [severity]="severity(c.status)" /></td>
-                        <td>{{ c.createdOnUtc | date: 'short' }}</td>
+                        <td><app-status [value]="c.status" /></td>
+                        <td><app-when [value]="c.createdOnUtc" /></td>
                         <td><p-button label="Manage" icon="pi pi-sliders-h" [text]="true" size="small" (onClick)="manage(c)" /></td>
                     </tr>
                 </ng-template>
@@ -76,7 +78,7 @@ type Sev = 'success' | 'info' | 'warn' | 'danger' | 'secondary';
         <p-dialog [header]="detail ? detail.ruleCode + ' — ' + detail.subjectType : 'Check'" [(visible)]="manageDialog" [modal]="true" [style]="{ width: '640px' }">
             @if (detail; as d) {
                 <div class="flex items-center gap-2 mb-3">
-                    <p-tag [value]="d.status" [severity]="severity(d.status)" />
+                    <app-status [value]="d.status" />
                     <span class="text-muted-color">{{ d.jurisdiction }} · subject {{ d.subjectId.slice(0, 8) }}…</span>
                 </div>
                 @if (d.waivedReason) {

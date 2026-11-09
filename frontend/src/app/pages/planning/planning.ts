@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { TABLE_CELLS } from '../../shared/table-cells';
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MessageService } from 'primeng/api';
@@ -28,7 +29,7 @@ const coord = (c: string): [number, number] => CITY[c?.toLowerCase().trim()] ?? 
 @Component({
     selector: 'app-planning',
     standalone: true,
-    imports: [CommonModule, FormsModule, TableModule, ButtonModule, DialogModule, InputTextModule, InputNumberModule, SelectModule, TagModule, ToastModule, ToolbarModule, TooltipModule],
+    imports: [...TABLE_CELLS, CommonModule, FormsModule, TableModule, ButtonModule, DialogModule, InputTextModule, InputNumberModule, SelectModule, TagModule, ToastModule, ToolbarModule, TooltipModule],
     providers: [MessageService],
     template: `
         <p-toast />
@@ -36,24 +37,25 @@ const coord = (c: string): [number, number] => CITY[c?.toLowerCase().trim()] ?? 
             <p-toolbar styleClass="mb-4">
                 <ng-template #start><span class="text-xl font-semibold">Planning</span></ng-template>
                 <ng-template #end>
+                    <span class="p-input-icon-left table-search"><i class="pi pi-search"></i><input pInputText type="search" placeholder="Search" aria-label="Search table" (input)="dt.filterGlobal($any($event.target).value, 'contains')" /></span>
                     <p-button label="Refresh" icon="pi pi-refresh" [text]="true" (onClick)="load()" />
                     <p-button label="New Load" icon="pi pi-plus" (onClick)="newDialog = true" />
                 </ng-template>
             </p-toolbar>
 
-            <p-table [value]="loads" [loading]="loading" [paginator]="true" [rows]="10" dataKey="id" [rowHover]="true">
+            <p-table #dt [globalFilterFields]="['reference','originCity','destinationCity','status']" [value]="loads" [loading]="loading" [paginator]="true" [rows]="10" dataKey="id" [rowHover]="true">
                 <ng-template #header>
                     <tr>
-                        <th>Reference</th><th>Route</th><th>Weight</th><th>Orders</th><th>Status</th><th style="width: 16rem"></th>
+                        <th pSortableColumn="reference">Reference <p-sortIcon field="reference" /></th><th>Route</th><th class="text-right" pSortableColumn="totalWeightKg">Weight <p-sortIcon field="totalWeightKg" /></th><th class="text-right" pSortableColumn="orderCount">Orders <p-sortIcon field="orderCount" /></th><th pSortableColumn="status">Status <p-sortIcon field="status" /></th><th style="width: 16rem"></th>
                     </tr>
                 </ng-template>
                 <ng-template #body let-l>
                     <tr>
                         <td class="font-medium">{{ l.reference }}</td>
                         <td>{{ l.originCity }} <i class="pi pi-arrow-right text-muted-color mx-1" style="font-size:.7rem"></i> {{ l.destinationCity }}</td>
-                        <td>{{ l.totalWeightKg }} kg</td>
-                        <td>{{ l.orderCount }}</td>
-                        <td><p-tag [value]="l.status" [severity]="severity(l.status)" /></td>
+                        <td class="text-right" style="font-variant-numeric: tabular-nums">{{ l.totalWeightKg | number }} <span class="text-muted-color text-sm">kg</span></td>
+                        <td class="text-right" style="font-variant-numeric: tabular-nums">{{ l.orderCount }}</td>
+                        <td><app-status [value]="l.status" /></td>
                         <td>
                             <p-button label="Manage" icon="pi pi-sliders-h" [text]="true" size="small" (onClick)="manage(l)" />
                             <p-button *ngIf="l.status === 'Draft'" label="Auto" icon="pi pi-bolt" [text]="true" size="small" severity="success"
@@ -81,7 +83,7 @@ const coord = (c: string): [number, number] => CITY[c?.toLowerCase().trim()] ?? 
         <p-dialog [header]="detail ? 'Load ' + detail.reference : 'Load'" [(visible)]="manageDialog" [modal]="true" [style]="{ width: '640px' }">
             <ng-container *ngIf="detail as d">
                 <div class="flex items-center gap-2 mb-3">
-                    <p-tag [value]="d.status" [severity]="severity(d.status)" />
+                    <app-status [value]="d.status" />
                     <span class="text-muted-color">{{ d.originCity }} → {{ d.destinationCity }} · {{ d.totalWeightKg }} kg</span>
                 </div>
 

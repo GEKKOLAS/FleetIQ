@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { TABLE_CELLS } from '../../shared/table-cells';
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MessageService } from 'primeng/api';
@@ -19,7 +20,7 @@ type Sev = 'success' | 'info' | 'warn' | 'danger' | 'secondary';
 @Component({
     selector: 'app-carriers',
     standalone: true,
-    imports: [CommonModule, FormsModule, TableModule, ButtonModule, DialogModule, InputTextModule, InputNumberModule, SelectModule, TagModule, ToastModule, ToolbarModule],
+    imports: [...TABLE_CELLS, CommonModule, FormsModule, TableModule, ButtonModule, DialogModule, InputTextModule, InputNumberModule, SelectModule, TagModule, ToastModule, ToolbarModule],
     providers: [MessageService],
     template: `
         <p-toast />
@@ -27,23 +28,24 @@ type Sev = 'success' | 'info' | 'warn' | 'danger' | 'secondary';
             <p-toolbar styleClass="mb-4">
                 <ng-template #start><span class="text-xl font-semibold">Carriers</span></ng-template>
                 <ng-template #end>
+                    <span class="p-input-icon-left table-search"><i class="pi pi-search"></i><input pInputText type="search" placeholder="Search" aria-label="Search table" (input)="dt.filterGlobal($any($event.target).value, 'contains')" /></span>
                     <p-button label="Refresh" icon="pi pi-refresh" [text]="true" (onClick)="load()" />
                     <p-button label="New Carrier" icon="pi pi-plus" (onClick)="newDialog = true" />
                 </ng-template>
             </p-toolbar>
 
-            <p-table [value]="carriers" [loading]="loading" [paginator]="true" [rows]="10" dataKey="id" [rowHover]="true">
+            <p-table #dt [globalFilterFields]="['legalName','country','status']" [value]="carriers" [loading]="loading" [paginator]="true" [rows]="10" dataKey="id" [rowHover]="true">
                 <ng-template #header>
-                    <tr><th>Legal name</th><th>Country</th><th>Capacity</th><th>Fleet</th><th>Drivers</th><th>Status</th><th style="width: 8rem"></th></tr>
+                    <tr><th pSortableColumn="legalName">Legal name <p-sortIcon field="legalName" /></th><th>Country</th><th class="text-right" pSortableColumn="totalCapacityKg">Capacity <p-sortIcon field="totalCapacityKg" /></th><th class="text-right" pSortableColumn="fleetSize">Fleet <p-sortIcon field="fleetSize" /></th><th class="text-right" pSortableColumn="driverCount">Drivers <p-sortIcon field="driverCount" /></th><th pSortableColumn="status">Status <p-sortIcon field="status" /></th><th style="width: 8rem"></th></tr>
                 </ng-template>
                 <ng-template #body let-c>
                     <tr>
                         <td class="font-medium">{{ c.legalName }}</td>
-                        <td>{{ c.country }}</td>
-                        <td>{{ c.totalCapacityKg | number }} kg</td>
-                        <td>{{ c.fleetSize }}</td>
-                        <td>{{ c.driverCount }}</td>
-                        <td><p-tag [value]="c.status" [severity]="severity(c.status)" /></td>
+                        <td><span class="country-chip">{{ c.country }}</span></td>
+                        <td class="text-right" style="font-variant-numeric: tabular-nums">{{ c.totalCapacityKg | number }} <span class="text-muted-color text-sm">kg</span></td>
+                        <td class="text-right" style="font-variant-numeric: tabular-nums"><i class="pi pi-truck text-muted-color mr-2"></i>{{ c.fleetSize }}</td>
+                        <td class="text-right" style="font-variant-numeric: tabular-nums"><i class="pi pi-user text-muted-color mr-2"></i>{{ c.driverCount }}</td>
+                        <td><app-status [value]="c.status" /></td>
                         <td><p-button label="Manage" icon="pi pi-sliders-h" [text]="true" size="small" (onClick)="manage(c)" /></td>
                     </tr>
                 </ng-template>
@@ -66,7 +68,7 @@ type Sev = 'success' | 'info' | 'warn' | 'danger' | 'secondary';
         <p-dialog [header]="detail ? detail.legalName : 'Carrier'" [(visible)]="manageDialog" [modal]="true" [style]="{ width: '680px' }">
             <ng-container *ngIf="detail as d">
                 <div class="flex items-center gap-2 mb-3">
-                    <p-tag [value]="d.status" [severity]="severity(d.status)" />
+                    <app-status [value]="d.status" />
                     <span class="text-muted-color">{{ d.country }} · reg {{ d.registrationNumber }} · {{ d.totalCapacityKg | number }} kg total</span>
                 </div>
 

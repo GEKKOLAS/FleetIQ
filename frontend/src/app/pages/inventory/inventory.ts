@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { TABLE_CELLS } from '../../shared/table-cells';
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MessageService } from 'primeng/api';
@@ -35,8 +36,7 @@ const MOVES: MoveOption[] = [
 @Component({
     selector: 'app-inventory',
     standalone: true,
-    imports: [
-        CommonModule, FormsModule, TableModule, ButtonModule, DialogModule, InputTextModule, InputNumberModule,
+    imports: [...TABLE_CELLS, CommonModule, FormsModule, TableModule, ButtonModule, DialogModule, InputTextModule, InputNumberModule,
         SelectModule, TagModule, ToastModule, ToggleSwitchModule, ToolbarModule, TooltipModule
     ],
     providers: [MessageService],
@@ -63,12 +63,13 @@ const MOVES: MoveOption[] = [
                     <label class="flex items-center gap-2 text-sm"><p-toggleswitch [(ngModel)]="lowOnly" (onChange)="load()" /> Low stock only</label>
                 </ng-template>
                 <ng-template #end>
+                    <span class="p-input-icon-left table-search"><i class="pi pi-search"></i><input pInputText type="search" placeholder="Search" aria-label="Search table" (input)="dt.filterGlobal($any($event.target).value, 'contains')" /></span>
                     <p-button label="Refresh" icon="pi pi-refresh" [text]="true" (onClick)="load()" />
                     <p-button label="New Item" icon="pi pi-plus" (onClick)="newDialog = true" />
                 </ng-template>
             </p-toolbar>
 
-            <p-table [value]="items" [loading]="loading" [paginator]="true" [rows]="10" dataKey="id" [rowHover]="true">
+            <p-table #dt [globalFilterFields]="['sku','name','warehouseCode']" [value]="items" [loading]="loading" [paginator]="true" [rows]="10" dataKey="id" [rowHover]="true">
                 <ng-template #header>
                     <tr>
                         <th pSortableColumn="sku">SKU <p-sortIcon field="sku" /></th><th>Item</th><th>Warehouse</th>

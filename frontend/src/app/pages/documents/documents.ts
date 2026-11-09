@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { TABLE_CELLS, partyName } from '../../shared/table-cells';
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MessageService } from 'primeng/api';
@@ -18,7 +19,7 @@ const DEFAULT_OWNER = '22222222-2222-2222-2222-222222222222'; // seeded customer
 @Component({
     selector: 'app-documents',
     standalone: true,
-    imports: [CommonModule, FormsModule, TableModule, ButtonModule, DialogModule, InputTextModule, SelectModule, TagModule, ToastModule, ToolbarModule],
+    imports: [...TABLE_CELLS, CommonModule, FormsModule, TableModule, ButtonModule, DialogModule, InputTextModule, SelectModule, TagModule, ToastModule, ToolbarModule],
     providers: [MessageService],
     template: `
         <p-toast />
@@ -26,22 +27,23 @@ const DEFAULT_OWNER = '22222222-2222-2222-2222-222222222222'; // seeded customer
             <p-toolbar styleClass="mb-4">
                 <ng-template #start><span class="text-xl font-semibold">Documents</span></ng-template>
                 <ng-template #end>
+                    <span class="p-input-icon-left table-search"><i class="pi pi-search"></i><input pInputText type="search" placeholder="Search" aria-label="Search table" (input)="dt.filterGlobal($any($event.target).value, 'contains')" /></span>
                     <p-button label="Refresh" icon="pi pi-refresh" [text]="true" (onClick)="load()" />
                     <p-button label="New Document" icon="pi pi-plus" (onClick)="newDialog = true" />
                 </ng-template>
             </p-toolbar>
 
-            <p-table [value]="documents" [loading]="loading" [paginator]="true" [rows]="10" dataKey="id" [rowHover]="true">
+            <p-table #dt [globalFilterFields]="['category','storageRef','status','ownerName']" [value]="documents" [loading]="loading" [paginator]="true" [rows]="10" dataKey="id" [rowHover]="true">
                 <ng-template #header>
                     <tr><th>Category</th><th>Storage ref</th><th>Owner</th><th>Status</th><th>Created</th><th style="width: 8rem"></th></tr>
                 </ng-template>
                 <ng-template #body let-d>
                     <tr>
-                        <td class="font-medium">{{ d.category }}</td>
+                        <td class="font-medium whitespace-nowrap"><i class="pi pi-file text-muted-color mr-2"></i>{{ d.category }}</td>
                         <td class="text-muted-color">{{ d.storageRef }}</td>
-                        <td class="text-muted-color">{{ d.ownerId.slice(0, 8) }}…</td>
-                        <td><p-tag [value]="d.status" [severity]="d.status === 'Verified' ? 'success' : 'warn'" /></td>
-                        <td>{{ d.createdOnUtc | date: 'short' }}</td>
+                        <td><app-party [id]="d.ownerId" /></td>
+                        <td><app-status [value]="d.status" /></td>
+                        <td><app-when [value]="d.createdOnUtc" /></td>
                         <td>
                             <p-button label="Verify" icon="pi pi-verified" [text]="true" size="small" severity="success"
                                       [disabled]="d.status !== 'Uploaded'" (onClick)="verify(d)" />
@@ -69,7 +71,7 @@ export class Documents implements OnInit {
     private api = inject(DocumentsService);
     private toast = inject(MessageService);
 
-    documents: DocumentSummary[] = [];
+    documents: (DocumentSummary & { ownerName: string })[] = [];
     loading = false;
     saving = false;
     newDialog = false;
@@ -82,7 +84,7 @@ export class Documents implements OnInit {
     load() {
         this.loading = true;
         this.api.list(100).subscribe({
-            next: (items) => { this.documents = items; this.loading = false; },
+            next: (items) => { this.documents = items.map((row) => ({ ...row, ownerName: partyName(row.ownerId) })); this.loading = false; },
             error: () => { this.loading = false; this.err('Could not load documents'); }
         });
     }

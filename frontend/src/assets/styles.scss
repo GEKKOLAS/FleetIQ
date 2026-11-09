@@ -74,3 +74,25 @@
     }
     .p-datatable, .p-toolbar { --p-datatable-header-cell-background: transparent; }
 }
+
+/* ---------- Data tables ---------- */
+.layout-wrapper {
+    .p-datatable .p-datatable-thead > tr > th {
+        font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; font-weight: 700;
+        color: var(--text-color-secondary); white-space: nowrap;
+    }
+    .p-datatable .p-datatable-tbody > tr > td { padding-block: .8rem; vertical-align: middle; }
+    .p-datatable .p-button-label { white-space: nowrap; }
+    .p-datatable .p-datatable-tbody > tr { transition: background-color var(--element-transition-duration); }
+    .p-toolbar { border-radius: 12px; gap: .75rem; }
+    .table-search {
+        position: relative; display: inline-flex; align-items: center; margin-right: .5rem;
+        > i { position: absolute; left: .8rem; color: var(--text-color-secondary); font-size: .85rem; pointer-events: none; }
+        > input { padding-left: 2.2rem; width: 13rem; font-size: .9rem; }
+    }
+    .country-chip {
+        display: inline-block; padding: .15rem .5rem; border-radius: 6px; font-size: .75rem; font-weight: 700; letter-spacing: .06em;
+        color: var(--text-color-secondary); background: color-mix(in srgb, var(--text-color-secondary) 12%, transparent);
+    }
+    @media (max-width: 800px) { .table-search > input { width: 9rem; } }
+}
