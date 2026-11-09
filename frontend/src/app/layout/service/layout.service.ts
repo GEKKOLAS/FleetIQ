@@ -1,5 +1,6 @@
 import { Injectable, effect, signal, computed } from '@angular/core';
 import { Subject } from 'rxjs';
+import { initialDarkTheme, rememberDarkTheme } from '../fleetiq-theme';
 
 export interface layoutConfig {
     preset?: string;
@@ -28,9 +29,9 @@ interface MenuChangeEvent {
 export class LayoutService {
     _config: layoutConfig = {
         preset: 'Aura',
-        primary: 'emerald',
-        surface: null,
-        darkTheme: false,
+        primary: 'fleetiq',
+        surface: 'fleetiq',
+        darkTheme: initialDarkTheme(),
         menuMode: 'static'
     };
 
@@ -79,6 +80,9 @@ export class LayoutService {
     private initialized = false;
 
     constructor() {
+        // The transition effect below skips its first run, so apply a saved/system dark choice here.
+        this.toggleDarkMode(this._config);
+        effect(() => rememberDarkTheme(!!this.layoutConfig().darkTheme));
         effect(() => {
             const config = this.layoutConfig();
             if (config) {

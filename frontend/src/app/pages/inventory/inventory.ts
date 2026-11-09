@@ -87,7 +87,7 @@ const MOVES: MoveOption[] = [
                         <td class="text-right">{{ i.quantityReserved | number: '1.0-3' }}</td>
                         <td class="text-right font-semibold" [class.text-orange-500]="i.isBelowReorderPoint">{{ i.quantityAvailable | number: '1.0-3' }}</td>
                         <td class="text-right text-muted-color">{{ i.reorderPoint | number: '1.0-3' }}</td>
-                        <td>
+                        <td class="whitespace-nowrap">
                             @if (i.status === 'Discontinued') { <p-tag value="Discontinued" severity="secondary" /> }
                             @else if (i.isBelowReorderPoint) { <p-tag value="Low stock" severity="warn" /> }
                             @else { <p-tag value="In stock" severity="success" /> }

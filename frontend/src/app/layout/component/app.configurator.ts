@@ -8,6 +8,7 @@ import Lara from '@primeuix/themes/lara';
 import Nora from '@primeuix/themes/nora';
 import { PrimeNG } from 'primeng/config';
 import { SelectButtonModule } from 'primeng/selectbutton';
+import { BRAND_PRIMARY, SURFACE_DARK, SURFACE_LIGHT } from '../fleetiq-theme';
 import { LayoutService } from '../service/layout.service';
 
 const presets = {
@@ -122,6 +123,8 @@ export class AppConfigurator {
     }
 
     surfaces: SurfacesType[] = [
+        // Brand default: cool grey in light mode, control-tower navy in dark mode.
+        { name: 'fleetiq', palette: { ...SURFACE_LIGHT, light: SURFACE_LIGHT, dark: SURFACE_DARK } as SurfacesType['palette'] },
         {
             name: 'slate',
             palette: {
@@ -273,7 +276,7 @@ export class AppConfigurator {
     primaryColors = computed<SurfacesType[]>(() => {
         const presetPalette = presets[this.layoutService.layoutConfig().preset as KeyOfType<typeof presets>].primitive;
         const colors = ['emerald', 'green', 'lime', 'orange', 'amber', 'yellow', 'teal', 'cyan', 'sky', 'blue', 'indigo', 'violet', 'purple', 'fuchsia', 'pink', 'rose'];
-        const palettes: SurfacesType[] = [{ name: 'noir', palette: {} }];
+        const palettes: SurfacesType[] = [{ name: 'fleetiq', palette: BRAND_PRIMARY }, { name: 'noir', palette: {} }];
 
         colors.forEach((color) => {
             palettes.push({

@@ -45,6 +45,18 @@ exclusively through the Gateway, authenticated with OIDC (Authorization Code + P
   <img src="docs/images/screenshots/landing.jpg" alt="FleetIQ landing page" width="100%">
 </p>
 
+### One design, two modes
+
+A refined light mode and a dark "Control Tower" mode that matches the 3D scene. The choice follows
+the operating system on the first visit, is toggled from the top bar and is remembered.
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/images/screenshots/theme-light.png" alt="Dashboard in light mode with a navy sidebar"></td>
+    <td width="50%"><img src="docs/images/screenshots/theme-dark.png" alt="Dashboard in dark Control Tower mode"></td>
+  </tr>
+</table>
+
 ### Operations dashboard
 
 One screen for the whole operation: order volume, active loads, shipments in transit and invoiced

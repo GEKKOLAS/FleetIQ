@@ -11,14 +11,66 @@
     border: none;
 }
 
-/* Shared operations shell: keep the public landing page's own visual language. */
+/* ---------- FleetIQ shell: one design, two modes (see app/layout/fleetiq-theme.ts) ---------- */
+:root {
+    --fiq-sidebar: #0f2433;
+    --fiq-sidebar-border: #1d3a4d;
+    --fiq-glow: #2fc2a3;
+}
+:root[class*='app-dark'] {
+    --fiq-sidebar: #0c1f2d;
+    --fiq-sidebar-border: #1c3747;
+}
+/* Dark mode: the control-tower navy with a faint horizon glow, as in the 3D scene. */
+:root[class*='app-dark'] body {
+    background:
+        radial-gradient(1100px 520px at 78% -8%, color-mix(in srgb, var(--fiq-glow) 13%, transparent), transparent 70%),
+        var(--surface-ground);
+    background-attachment: fixed;
+}
+
 .layout-wrapper {
     font-family: 'Lato', system-ui, sans-serif;
-    .layout-topbar { border-bottom: 1px solid var(--surface-border); }
+
+    .layout-topbar {
+        border-bottom: 1px solid var(--surface-border);
+        background: color-mix(in srgb, var(--surface-card) 86%, transparent);
+        backdrop-filter: blur(14px);
+    }
     .layout-topbar-logo { font-weight: 800; letter-spacing: -.8px; }
-    .layout-sidebar { border: 1px solid var(--surface-border); box-shadow: 0 8px 30px #132d4210; border-radius: 16px; }
+
+    /* The navy sidebar anchors both modes; inside it the text tokens are redefined for a dark surface. */
+    .layout-sidebar {
+        --text-color: #dbe7ee;
+        --text-color-secondary: #7f9aab;
+        --surface-hover: rgba(255, 255, 255, .07);
+        --primary-color: #5fdcc0;
+        background: linear-gradient(180deg, color-mix(in srgb, var(--fiq-sidebar) 100%, #fff 0%), color-mix(in srgb, var(--fiq-sidebar) 88%, #000));
+        border: 1px solid var(--fiq-sidebar-border);
+        border-radius: 18px;
+        box-shadow: 0 18px 40px -18px rgba(8, 26, 38, .55);
+    }
     .layout-menu .layout-menuitem-root-text { font-size: 9px; letter-spacing: 1.8px; color: var(--text-color-secondary); padding: 12px 0 6px; }
-    .layout-menu a { border-radius: 8px; font-size: 12px; }
-    .layout-menu a.active-route { background: color-mix(in srgb, var(--primary-color) 9%, transparent); }
-    .card { border: 1px solid var(--surface-border); border-radius: 14px; box-shadow: 0 3px 16px #132d4205; }
+    .layout-menu a { border-radius: 9px; font-size: 12px; }
+    .layout-menu a .layout-menuitem-icon { color: var(--text-color-secondary); transition: color var(--element-transition-duration); }
+    .layout-menu a:hover .layout-menuitem-icon { color: var(--text-color); }
+    .layout-menu a.active-route {
+        background: linear-gradient(90deg, color-mix(in srgb, var(--fiq-glow) 24%, transparent), color-mix(in srgb, var(--fiq-glow) 5%, transparent));
+        box-shadow: inset 2px 0 0 var(--primary-color);
+        .layout-menuitem-icon { color: var(--primary-color); }
+    }
+
+    .card {
+        border: 1px solid var(--surface-border);
+        border-radius: 16px;
+        box-shadow: 0 1px 2px rgba(19, 45, 66, .04), 0 10px 28px -18px rgba(19, 45, 66, .22);
+    }
+}
+
+:root[class*='app-dark'] .layout-wrapper {
+    .card {
+        background: linear-gradient(180deg, color-mix(in srgb, var(--surface-card) 94%, #fff), var(--surface-card));
+        box-shadow: 0 1px 0 rgba(255, 255, 255, .03) inset, 0 16px 34px -22px rgba(0, 0, 0, .7);
+    }
+    .p-datatable, .p-toolbar { --p-datatable-header-cell-background: transparent; }
 }

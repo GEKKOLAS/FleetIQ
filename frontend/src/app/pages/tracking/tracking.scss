@@ -36,3 +36,16 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline:3px so
 
 // Explicit translucent selection also keeps contrast when the theme changes at runtime.
 .shipment.selected { background:rgba(29,185,152,.08); border-color:rgba(29,185,152,.45); }
+
+// Dark mode: pastel chips become tinted glass so they sit on the navy surfaces.
+:host-context(.app-dark) {
+    .metric-icon { background:rgba(148,178,196,.12); color:#a9c0cf; }
+    .metric-icon.mint { background:rgba(47,194,163,.15); color:#63dcc0; }
+    .metric-icon.blue { background:rgba(96,156,235,.16); color:#8fbcf5; }
+    .metric-icon.amber { background:rgba(232,176,80,.15); color:#ecc27a; }
+    .status { color:#8fbcf5; background:rgba(96,156,235,.14); }
+    .status.delivered { color:#63dcc0; background:rgba(47,194,163,.14); }
+    .truck-badge { color:#7fd3c4; }
+    .fit-button { border-color:#355260; background:#122e40; color:#cfe5ee; }
+    .view-switch button.active { box-shadow:0 1px 6px rgba(0,0,0,.4); }
+}
