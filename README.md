@@ -63,6 +63,13 @@ with a fleet monitor to search and filter every shipment and real-time position 
   <img src="docs/images/screenshots/tracking.png" alt="Live tracking control tower with 3D distribution network and fleet monitor" width="100%">
 </p>
 
+Zoom in and the schematic becomes a scene: distribution centres with solar roofs, lit loading bays and
+yard lighting, delivery trucks with working lights, and routes that pulse from origin to destination.
+
+<p align="center">
+  <img src="docs/images/screenshots/tracking-3d.png" alt="Close-up of the 3D scene: a delivery truck leaving a lit distribution centre along a glowing route" width="100%">
+</p>
+
 ### Inventory
 
 Stock per SKU and warehouse with on-hand, reserved and available quantities. Receive goods, reserve

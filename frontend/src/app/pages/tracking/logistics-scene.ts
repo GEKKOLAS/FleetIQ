@@ -1,9 +1,14 @@
 import { AfterViewInit, Component, ElementRef, EventEmitter, Input, NgZone, OnChanges, OnDestroy, Output, SimpleChanges, ViewChild, inject } from '@angular/core';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { ShipmentSummary } from '../../core/models';
 import { createTruck, createWarehouse, disposeObject } from './logistics-assets';
-import { createNetworkStage, createPlaceLabel, createRouteVisual, RouteVisual } from './logistics-visuals';
+import { advanceRouteFlow, createBeacon, createNetworkStage, createPlaceLabel, createRouteVisual, createSkyTexture, RouteVisual } from './logistics-visuals';
 
 export type RouteCoordinates = Record<string, [number, number][]>;
 
@@ -53,6 +58,11 @@ export class LogisticsScene implements AfterViewInit, OnChanges, OnDestroy {
     private roadViews = new Map<string, RouteVisual>();
     private observer?: ResizeObserver;
     private keyLight?: THREE.DirectionalLight;
+    private composer?: EffectComposer;
+    private bloom?: UnrealBloomPass;
+    private environment?: THREE.Texture;
+    private sky?: THREE.Texture;
+    private pulses: THREE.Mesh<THREE.RingGeometry, THREE.MeshBasicMaterial>[] = [];
     private destroyed = false;
     private pointerStart = new THREE.Vector2();
     private topology = '';
@@ -76,22 +86,44 @@ export class LogisticsScene implements AfterViewInit, OnChanges, OnDestroy {
             this.renderer.setClearColor('#0b1b29');
             this.renderer.outputColorSpace = THREE.SRGBColorSpace;
             this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-            this.renderer.toneMappingExposure = 1.12;
+            this.renderer.toneMappingExposure = .98;
             this.renderer.shadowMap.enabled = true;
             this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
             this.host.nativeElement.appendChild(this.renderer.domElement);
-            this.scene.fog = new THREE.Fog('#0b1b29', 100, 220);
-            this.scene.add(new THREE.HemisphereLight('#d8efff', '#213e4b', 2.2));
-            this.keyLight = new THREE.DirectionalLight('#fff2dc', 3.1);
-            this.keyLight.position.set(-18, 30, 18);
+            this.scene.fog = new THREE.Fog('#0b1e2c', 110, 240);
+            this.scene.background = this.sky = createSkyTexture();
+            // Image-based lighting gives paint, glass and chrome something to reflect.
+            const pmrem = new THREE.PMREMGenerator(this.renderer);
+            const room = new RoomEnvironment();
+            this.environment = pmrem.fromScene(room, .04).texture;
+            pmrem.dispose();
+            disposeObject(room);
+            this.scene.environment = this.environment;
+            this.scene.environmentIntensity = .38;
+            // Dusk: a low warm sun against a cool sky, so lamps and lit windows carry the scene.
+            this.scene.add(new THREE.HemisphereLight('#a9cdf0', '#15283a', .85));
+            this.keyLight = new THREE.DirectionalLight('#ffd9ae', 2.0);
+            this.keyLight.position.set(-22, 24, 16);
             this.keyLight.castShadow = true;
-            this.keyLight.shadow.mapSize.set(1024, 1024);
+            this.keyLight.shadow.mapSize.set(2048, 2048);
             this.keyLight.shadow.camera.left = this.keyLight.shadow.camera.bottom = -35;
             this.keyLight.shadow.camera.right = this.keyLight.shadow.camera.top = 35;
             this.keyLight.shadow.normalBias = .04;
-            const fill = new THREE.DirectionalLight('#8cc8ee', 1.1);
+            this.keyLight.shadow.radius = 3;
+            const fill = new THREE.DirectionalLight('#6fa9f5', .55);
             fill.position.set(20, 14, -16);
             this.scene.add(this.keyLight, fill, this.network, this.vehicleLayer);
+            try {
+                // Bloom only catches surfaces well above white: lamps, lit windows, beacons and the selected route.
+                const target = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: 4 });
+                this.composer = new EffectComposer(this.renderer, target);
+                this.composer.addPass(new RenderPass(this.scene, this.camera));
+                this.bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), .38, .5, 1.7);
+                this.composer.addPass(this.bloom);
+                this.composer.addPass(new OutputPass());
+            } catch {
+                this.composer = undefined;       // plain rendering still works without float targets
+            }
             this.resize();
             this.controls = new OrbitControls(this.camera, this.renderer.domElement);
             this.controls.enableDamping = true;
@@ -110,6 +142,11 @@ export class LogisticsScene implements AfterViewInit, OnChanges, OnDestroy {
                 const dt = Math.min(.1, Math.max(0, (time - this.lastFrame) / 1000));
                 this.lastFrame = time;
                 const alpha = this.reducedMotion ? 1 : 1 - Math.exp(-dt * 9);
+                if (!this.reducedMotion) {
+                    advanceRouteFlow(dt);
+                    const phase = time / 2200 % 1;
+                    for (const pulse of this.pulses) { pulse.scale.setScalar(1 + phase * 2.4); pulse.material.opacity = .6 * (1 - phase); }
+                }
                 for (const view of this.vehicles.values()) {
                     view.root.position.lerp(view.target, alpha);
                     const difference = Math.atan2(Math.sin(view.heading - view.model.rotation.y), Math.cos(view.heading - view.model.rotation.y));
@@ -118,7 +155,7 @@ export class LogisticsScene implements AfterViewInit, OnChanges, OnDestroy {
                 }
                 this.controls?.update();
                 if (time - this.lastLabelLayout > 70) { this.layoutLabels(); this.lastLabelLayout = time; }
-                this.renderer!.render(this.scene, this.camera);
+                if (this.composer) this.composer.render(dt); else this.renderer!.render(this.scene, this.camera);
             }));
         } catch {
             this.failed = true;
@@ -154,6 +191,8 @@ export class LogisticsScene implements AfterViewInit, OnChanges, OnDestroy {
         this.camera.aspect = width / height;
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(width, height);
+        this.composer?.setPixelRatio(this.renderer.getPixelRatio());
+        this.composer?.setSize(width, height);
         if (changed) this.fit((previousAspect < .9) !== (this.camera.aspect < .9));
         this.lastLabelLayout = -1000;
     }
@@ -170,6 +209,7 @@ export class LogisticsScene implements AfterViewInit, OnChanges, OnDestroy {
         for (const [id, road] of this.roadViews) {
             const selected = id === this.selectedId;
             road.accent.color.set(selected ? '#75f2cc' : '#82b5ca');
+            if (selected) road.accent.color.multiplyScalar(2.6);     // over the bloom threshold
             road.accent.opacity = selected ? 1 : .55;
             road.bed.color.set(selected ? '#367b75' : '#294b5f');
             road.group.renderOrder = selected ? 2 : 0;
@@ -185,6 +225,7 @@ export class LogisticsScene implements AfterViewInit, OnChanges, OnDestroy {
         this.labels.visible = this.labelsVisible;
         this.network.add(this.labels);
         this.roadViews.clear();
+        this.pulses = [];
         this.scene.remove(this.stage);
         disposeObject(this.stage);
         const points: [number, number][] = [];
@@ -244,17 +285,19 @@ export class LogisticsScene implements AfterViewInit, OnChanges, OnDestroy {
     }
 
     private addHub(point: THREE.Vector3, name: string, role: string, color: string) {
-        const hub = createWarehouse(color);
+        let variant = 0;
+        for (const character of name) variant = (variant * 31 + character.charCodeAt(0)) >>> 0;
+        const hub = createWarehouse(color, variant % 6);
         // Building meshes are illustrative; the node stays at its recorded coordinate.
         hub.position.copy(point).add(new THREE.Vector3(0, 0, -1.8));
         this.network.add(hub);
         const label = createPlaceLabel(name, role, color);
         label.position.copy(point).add(new THREE.Vector3(0, 4.0, -1.8));
         this.labels.add(label);
-        const marker = new THREE.Mesh(new THREE.RingGeometry(.27, .37, 32), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: .85, side: THREE.DoubleSide, depthWrite: false }));
-        marker.rotation.x = -Math.PI / 2;
-        marker.position.copy(point).y = .06;
-        this.network.add(marker);
+        const beacon = createBeacon(color);
+        beacon.group.position.copy(point);
+        this.network.add(beacon.group);
+        this.pulses.push(beacon.pulse);
     }
 
     private addRoute(id: string, points: THREE.Vector3[], dashed: boolean) {
@@ -388,6 +431,11 @@ export class LogisticsScene implements AfterViewInit, OnChanges, OnDestroy {
         this.vehicles.clear();
         this.roadViews.clear();
         this.keyLight?.shadow.dispose();
+        this.bloom?.dispose();
+        this.composer?.dispose();
+        this.environment?.dispose();
+        this.sky?.dispose();
+        this.pulses = [];
         this.renderer?.dispose();
         this.renderer?.domElement.remove();
     }
