@@ -32,6 +32,7 @@ Both the gateway and each service validate the JWT (defense in depth).
 | Compliance | 5090 | /compliancechecks |
 | Integration | 5091 | /integrationconnectors |
 | Intelligence | 5092 | /predictionrequests |
+| Inventory | 5093 | /inventoryitems |
 
 Set a service's URL with `ASPNETCORE_URLS`, e.g. `ASPNETCORE_URLS=https://localhost:5083 dotnet run --project src/Services/Carriers/FleetIQ.Carriers.Api`.
 

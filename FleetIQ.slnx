@@ -52,6 +52,12 @@
     <Project Path="src/Services/Identity/FleetIQ.Identity.Domain/FleetIQ.Identity.Domain.csproj" />
     <Project Path="src/Services/Identity/FleetIQ.Identity.Infrastructure/FleetIQ.Identity.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/src/Services/Inventory/">
+    <Project Path="src/Services/Inventory/FleetIQ.Inventory.Api/FleetIQ.Inventory.Api.csproj" />
+    <Project Path="src/Services/Inventory/FleetIQ.Inventory.Application/FleetIQ.Inventory.Application.csproj" />
+    <Project Path="src/Services/Inventory/FleetIQ.Inventory.Domain/FleetIQ.Inventory.Domain.csproj" />
+    <Project Path="src/Services/Inventory/FleetIQ.Inventory.Infrastructure/FleetIQ.Inventory.Infrastructure.csproj" />
+  </Folder>
   <Folder Name="/src/Services/Integration/">
     <Project Path="src/Services/Integration/FleetIQ.Integration.Api/FleetIQ.Integration.Api.csproj" />
     <Project Path="src/Services/Integration/FleetIQ.Integration.Application/FleetIQ.Integration.Application.csproj" />
@@ -97,6 +103,7 @@
     <Project Path="tests/FleetIQ.Identity.UnitTests/FleetIQ.Identity.UnitTests.csproj" />
     <Project Path="tests/FleetIQ.Integration.UnitTests/FleetIQ.Integration.UnitTests.csproj" />
     <Project Path="tests/FleetIQ.Intelligence.UnitTests/FleetIQ.Intelligence.UnitTests.csproj" />
+    <Project Path="tests/FleetIQ.Inventory.UnitTests/FleetIQ.Inventory.UnitTests.csproj" />
     <Project Path="tests/FleetIQ.Notifications.UnitTests/FleetIQ.Notifications.UnitTests.csproj" />
     <Project Path="tests/FleetIQ.Orders.UnitTests/FleetIQ.Orders.UnitTests.csproj" />
     <Project Path="tests/FleetIQ.Planning.UnitTests/FleetIQ.Planning.UnitTests.csproj" />

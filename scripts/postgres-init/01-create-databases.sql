@@ -11,3 +11,4 @@ CREATE DATABASE fleetiq_analytics;
 CREATE DATABASE fleetiq_compliance;
 CREATE DATABASE fleetiq_integration;
 CREATE DATABASE fleetiq_intelligence;
+CREATE DATABASE fleetiq_inventory;

@@ -23,6 +23,7 @@ run "src/Services/Analytics/FleetIQ.Analytics.Api" "https://localhost:5089"
 run "src/Services/Compliance/FleetIQ.Compliance.Api" "https://localhost:5090"
 run "src/Services/Integration/FleetIQ.Integration.Api" "https://localhost:5091"
 run "src/Services/Intelligence/FleetIQ.Intelligence.Api" "https://localhost:5092"
+run "src/Services/Inventory/FleetIQ.Inventory.Api" "https://localhost:5093"
 
 echo ""
 echo "All services starting. Gateway (front-end entry): http://localhost:5080"

@@ -30,6 +30,7 @@ export class AppMenu {
                     { label: 'Carriers', icon: 'pi pi-fw pi-truck', routerLink: ['/app/carriers'] },
                     { label: 'Planning', icon: 'pi pi-fw pi-sitemap', routerLink: ['/app/planning'] },
                     { label: 'Live Tracking', icon: 'pi pi-fw pi-map-marker', routerLink: ['/app/tracking'] },
+                    { label: 'Inventory', icon: 'pi pi-fw pi-warehouse', routerLink: ['/app/inventory'] },
                     { label: 'Billing', icon: 'pi pi-fw pi-credit-card', routerLink: ['/app/billing'] },
                     { label: 'Documents', icon: 'pi pi-fw pi-file', routerLink: ['/app/documents'] },
                     { label: 'Notifications', icon: 'pi pi-fw pi-bell', routerLink: ['/app/notifications'] },

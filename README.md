@@ -5,7 +5,7 @@
 <p align="center">
   <img alt=".NET" src="https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white">
   <img alt="Architecture" src="https://img.shields.io/badge/architecture-DDD%20%2B%20Clean%20Architecture-38bdf8">
-  <img alt="Services" src="https://img.shields.io/badge/bounded%20contexts-12-34d399">
+  <img alt="Services" src="https://img.shields.io/badge/bounded%20contexts-13-34d399">
   <img alt="Angular" src="https://img.shields.io/badge/Angular-20-DD0031?logo=angular&logoColor=white">
   <img alt="CI" src="https://github.com/GEKKOLAS/FleetIQ/actions/workflows/ci.yml/badge.svg">
 </p>
@@ -22,10 +22,10 @@
 ## What FleetIQ is
 
 FleetIQ is a **backend platform for running a freight & logistics operation**: taking a customer
-order, matching it to a carrier and a load, tracking the shipment, billing it, and keeping the
+order, matching it to a carrier and a load, managing warehouse stock, tracking the shipment, billing it, and keeping the
 paperwork and compliance checks in order along the way.
 
-It's built as a **microservices monorepo** — 12 independent services, one per business capability,
+It's built as a **microservices monorepo** — 13 independent services, one per business capability,
 each owning its own database and publishing what happened as domain events instead of calling its
 neighbors directly. There's no shared "god database" and no service reaching into another's tables;
 every cross-service effect (e.g. *"an invoice was issued, so send a notification"*) travels through
@@ -62,6 +62,19 @@ with a fleet monitor to search and filter every shipment and real-time position 
 <p align="center">
   <img src="docs/images/screenshots/tracking.png" alt="Live tracking control tower with 3D distribution network and fleet monitor" width="100%">
 </p>
+
+### Inventory
+
+Stock per SKU and warehouse with on-hand, reserved and available quantities. Receive goods, reserve
+them for an order, ship or release them, and run cycle counts. Items below their reorder point are
+flagged, and every change is recorded in an immutable movement ledger.
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/images/screenshots/inventory.png" alt="Inventory list with on-hand, reserved and available stock and low-stock flags"></td>
+    <td width="50%"><img src="docs/images/screenshots/inventory-history.png" alt="Movement history of a SKU: receipt, reservation, shipment and cycle-count adjustment"></td>
+  </tr>
+</table>
 
 ### Orders, planning, carriers and billing
 
@@ -123,6 +136,7 @@ with a fleet monitor to search and filter every shipment and real-time position 
 | 10 | Compliance | `ComplianceCheck` | `/compliancechecks` | 5090 |
 | 11 | Integration | `IntegrationConnector` | `/integrationconnectors` | 5091 |
 | 12 | Intelligence | `PredictionRequest` | `/predictionrequests` | 5092 |
+| 13 | Inventory | `InventoryItem` | `/inventoryitems` | 5093 |
 
 Plus **Gateway** (5080, entry point) and **IdentityServer** (5001, token endpoint).
 
@@ -131,6 +145,9 @@ queries, state machines). `Carriers`, `Planning`, `Tracking` are similarly deepe
 (`Documents`, `Notifications`, `Analytics`, `Compliance`, `Integration`, `Intelligence`) each have a
 history/child-entity concept of their own (document versions, notification retries, report runs,
 compliance findings, connector health, prediction confidence) plus list endpoints and domain unit tests.
+`Inventory` keeps an immutable stock-movement ledger, prevents overselling (reservations can't exceed
+available stock, and concurrent updates are rejected with `409`) and raises a low-stock event when an item
+crosses its reorder point.
 
 ## Tech stack
 
@@ -254,7 +271,7 @@ fleetiq/
         *.Infrastructure        # EF Core (Npgsql), repository, DbContext, outbox
         *.Api                   # Minimal API endpoints, health, OpenAPI, OTel
       Carriers/ Planning/ Tracking/ Billing/ Documents/ Notifications/
-      Analytics/ Compliance/ Integration/ Intelligence/ Identity/
+      Analytics/ Compliance/ Integration/ Intelligence/ Inventory/ Identity/
   tests/
     FleetIQ.<Service>.UnitTests # xUnit domain tests, one project per service
 ```

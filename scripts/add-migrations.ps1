@@ -5,7 +5,7 @@ Set-Location (Join-Path $PSScriptRoot '..')
 
 dotnet tool install --global dotnet-ef 2>$null | Out-Null
 
-$services = @('Orders', 'Identity', 'Carriers', 'Planning', 'Tracking', 'Billing', 'Documents', 'Notifications', 'Analytics', 'Compliance', 'Integration', 'Intelligence')
+$services = @('Orders', 'Identity', 'Carriers', 'Planning', 'Tracking', 'Billing', 'Documents', 'Notifications', 'Analytics', 'Compliance', 'Integration', 'Intelligence', 'Inventory')
 foreach ($s in $services) {
     Write-Host "==> Migration for $s" -ForegroundColor Cyan
     dotnet ef migrations add InitialCreate `

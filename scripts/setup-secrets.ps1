@@ -53,7 +53,7 @@ if (docker ps -a --filter 'name=^fleetiq-' --format '{{.Names}}' 2>$null) {
 $pg = $envMap['POSTGRES_PASSWORD']
 $secrets = [ordered]@{}
 foreach ($svc in 'Analytics', 'Billing', 'Carriers', 'Compliance', 'Documents', 'Identity', 'Integration',
-                 'Intelligence', 'Notifications', 'Orders', 'Planning', 'Tracking') {
+                 'Intelligence', 'Inventory', 'Notifications', 'Orders', 'Planning', 'Tracking') {
     $secrets["ConnectionStrings:$svc"] = "Host=localhost;Port=5432;Database=fleetiq_$($svc.ToLower());Username=$pgUser;Password=$pg"
 }
 $secrets['ConnectionStrings:RabbitMq'] = "amqp://$($envMap['RABBITMQ_DEFAULT_USER']):$($envMap['RABBITMQ_DEFAULT_PASS'])@localhost:5672"

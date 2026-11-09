@@ -22,6 +22,7 @@ $apps = @(
     @{ name = 'Compliance';     proj = 'src/Services/Compliance/FleetIQ.Compliance.Api';    url = 'https://localhost:5090' }
     @{ name = 'Integration';    proj = 'src/Services/Integration/FleetIQ.Integration.Api';  url = 'https://localhost:5091' }
     @{ name = 'Intelligence';   proj = 'src/Services/Intelligence/FleetIQ.Intelligence.Api'; url = 'https://localhost:5092' }
+    @{ name = 'Inventory';      proj = 'src/Services/Inventory/FleetIQ.Inventory.Api';      url = 'https://localhost:5093' }
 )
 
 foreach ($a in $apps) {

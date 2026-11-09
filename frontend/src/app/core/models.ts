@@ -320,3 +320,40 @@ export interface CarrierDetail {
     vehicles: VehicleLine[];
     drivers: DriverLine[];
 }
+
+// ---------- Inventory ----------
+export interface InventoryItemSummary {
+    id: string;
+    sku: string;
+    name: string;
+    warehouseCode: string;
+    unitOfMeasure: string;
+    quantityOnHand: number;
+    quantityReserved: number;
+    quantityAvailable: number;
+    reorderPoint: number;
+    isBelowReorderPoint: boolean;
+    status: string;
+    createdOnUtc: string;
+    lastMovementOnUtc?: string | null;
+}
+export interface StockMovementLine {
+    type: string;
+    quantity: number;
+    reference: string;
+    onHandAfter: number;
+    reservedAfter: number;
+    occurredOnUtc: string;
+}
+export interface InventoryItemDetail extends InventoryItemSummary {
+    movements: StockMovementLine[];
+}
+export interface CreateInventoryItem {
+    sku: string;
+    name: string;
+    warehouseCode: string;
+    unitOfMeasure: string;
+    reorderPoint: number;
+}
+/** Operations that move stock; `adjustments` takes a counted quantity + reason instead. */
+export type StockOperation = 'receipts' | 'reservations' | 'reservations/release' | 'shipments';

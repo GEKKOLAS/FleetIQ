@@ -9,6 +9,7 @@ import { Compliance } from './app/pages/compliance/compliance';
 import { Dashboard } from './app/pages/dashboard/dashboard';
 import { Documents } from './app/pages/documents/documents';
 import { Integration } from './app/pages/integration/integration';
+import { Inventory } from './app/pages/inventory/inventory';
 import { Intelligence } from './app/pages/intelligence/intelligence';
 import { Landing } from './app/pages/landing/landing';
 import { Notfound } from './app/pages/notfound/notfound';
@@ -30,6 +31,7 @@ export const appRoutes: Routes = [
             { path: 'carriers', component: Carriers },
             { path: 'planning', component: Planning },
             { path: 'tracking', loadComponent: () => import('./app/pages/tracking/tracking').then(m => m.Tracking) },
+            { path: 'inventory', component: Inventory },
             { path: 'billing', component: Billing },
             { path: 'documents', component: Documents },
             { path: 'notifications', component: Notifications },

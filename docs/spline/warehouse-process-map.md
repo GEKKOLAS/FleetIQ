@@ -2,7 +2,7 @@
 
 [Open the editable Spline model](https://app.spline.design/file/4f70bf49-7bcc-441d-9270-f5209ebc08f3). File UUID: `4f70bf49-7bcc-441d-9270-f5209ebc08f3`.
 
-The warehouse is a conceptual spatial map of FleetIQ's order, planning, carrier, and tracking workflows. The application has no warehouse, inventory, storage-bin, picking, or stock-management aggregate. Racks, pallets, docks, and the yard illustrate transport processes; they do not represent measured facilities or inventory records.
+The warehouse is a conceptual spatial map of FleetIQ's order, planning, carrier, and tracking workflows. Stock is managed by the **Inventory** service (`InventoryItem`: one SKU in one warehouse, with on-hand, reserved and available quantities and a movement ledger). The application still has no warehouse-layout, storage-bin, or picking aggregate, so racks, docks, and the yard illustrate transport processes and do not represent measured facilities. The scene is not connected to inventory records.
 
 ## Spatial zones and workflow
 
@@ -28,6 +28,10 @@ The normal path across these zones is a process explanation spanning separate en
 | Vehicle (3) | `Available`, `InUse`, `Maintenance` |
 | Driver (3) | `Available`, `OnDuty`, `Off` |
 | Tracking event (5) | `Created`, `Dispatched`, `Milestone`, `Exception`, `Delivered` |
+| Inventory item (2) | `Active`, `Discontinued` |
+| Stock movement (5) | `Receipt`, `Reservation`, `ReservationRelease`, `Shipment`, `Adjustment` |
+
+Inventory is independent of the order and load lifecycles: stock is reserved and shipped against a free-text reference (for example an order number) through the Inventory API. No event links an order or load transition to a reservation yet.
 
 A carrier needs at least one vehicle and one driver to become `Verified`; only verified carriers can be assigned through the planning application handler. Loads reference the carrier, not a specific vehicle or driver. The illustrated truck therefore represents carrier transport capacity, not an actual vehicle assignment.
 
@@ -50,4 +54,5 @@ These interactions are a demonstration of the workflow. Scene positions, goods, 
 - Planning validation and event publication: [AssignCarrierCommand.cs](../../src/Services/Planning/FleetIQ.Planning.Application/AssignCarrier/AssignCarrierCommand.cs), [AttachRouteCommand.cs](../../src/Services/Planning/FleetIQ.Planning.Application/AttachRoute/AttachRouteCommand.cs), [ConfirmLoadCommand.cs](../../src/Services/Planning/FleetIQ.Planning.Application/ConfirmLoad/ConfirmLoadCommand.cs).
 - Planning-to-tracking handoff: [IntegrationEvents.cs](../../src/Contracts/FleetIQ.Contracts/IntegrationEvents.cs), [LoadConfirmedConsumer.cs](../../src/Services/Tracking/FleetIQ.Tracking.Infrastructure/Consumers/LoadConfirmedConsumer.cs).
 - Shipment lifecycle and timeline: [Shipment.cs](../../src/Services/Tracking/FleetIQ.Tracking.Domain/Shipment.cs), [ShipmentStatus.cs](../../src/Services/Tracking/FleetIQ.Tracking.Domain/ShipmentStatus.cs), [TrackingEvent.cs](../../src/Services/Tracking/FleetIQ.Tracking.Domain/TrackingEvent.cs).
+- Inventory: [InventoryItem.cs](../../src/Services/Inventory/FleetIQ.Inventory.Domain/InventoryItem.cs), [StockMovement.cs](../../src/Services/Inventory/FleetIQ.Inventory.Domain/StockMovement.cs).
 - Carrier resources: [Carrier.cs](../../src/Services/Carriers/FleetIQ.Carriers.Domain/Carrier.cs), [Vehicle.cs](../../src/Services/Carriers/FleetIQ.Carriers.Domain/Vehicle.cs), [Driver.cs](../../src/Services/Carriers/FleetIQ.Carriers.Domain/Driver.cs).
